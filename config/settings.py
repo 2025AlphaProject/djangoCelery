@@ -22,6 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # env 파일을 읽습니다.
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
+# env 파일로부터 정보를 가져옵니다.
+AI_SERVICE_KEY = env('AI_SERVICE_KEY')
+PUBLIC_DATA_PORTAL_API_KEY = env('PUBLIC_DATA_PORTAL_API_KEY')
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
