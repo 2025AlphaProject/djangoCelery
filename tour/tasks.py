@@ -2,6 +2,9 @@ from celery import shared_task  # shared_task는 장고와 연관이 있는 작�
 from modules.ai_recommender import AiTourRecommender
 from modules.tour_api import Arrange
 from config.settings import AI_SERVICE_KEY, PUBLIC_DATA_PORTAL_API_KEY
+from celery.signals import task_success, task_failure
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 @shared_task
@@ -17,3 +20,45 @@ def get_recommended_tour_based_area(area_code, content_type_id, arrange=Arrange.
         data['sigungu_code'] = sigungu_code
     recommended_list = recommender.get_recommended_tour_list_based_area(**data)
     return recommended_list
+
+@task_success.connect
+def task_success_handler(sender, result, **kwargs):
+    """
+        Celery 작업이 성공적으로 완료되었을 때 호출됨.
+        """
+    task_id = sender.request.id # 작업 아이디를 가져옵니다.
+
+    # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"task_{task_id}",
+        {
+            "type": "task_update",
+            "message": {
+                "task_id": task_id,
+                "status": "SUCCESS",
+                "result": result,
+            },
+        },
+    )
+
+@task_failure.connect
+def task_failure_handler(sender, exception, **kwargs):
+    """
+    Celery 작업이 실패했을 때 호출됨.
+    """
+    task_id = sender.request.id
+
+    # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"task_{task_id}",
+        {
+            "type": "task_update",
+            "message": {
+                "task_id": task_id,
+                "status": "FAILURE",
+                "result": str(exception),
+            },
+        },
+    )
