@@ -1,0 +1,137 @@
+import anthropic
+
+from tour_api import *
+import ast
+
+
+
+class AiTourRecommender:
+    # SYSTEM_TEXT = '너는 여행사 투어 가이드야. 하루치 일정을 짜려고 해. 반드시 대답은 부가 설명없이 파이썬 딕셔너리를 원소로 갖는 리스트로만 대답해줘야해. 예를들어, [[{\'id\': \'0\', \'name\': \'A\', \'mapX\': \'126\', \'mapY\': \'37\'}, {\'id\': \'1\', \'name\': \'A\', \'mapX\': \'126\', \'mapY\': \'37\'}], [{\'id\': \'7\', \'name\': \'A\', \'mapX\': \'126\', \'mapY\': \'37\'}]] 이렇게. 예시 데이터를 보면 알겠지만 여행 계획 하나당 하나의 리스트로 구성해서, 전체는 리스트 형태로 묶어서 출력해줘. 또한, 정보를 줄때 혹시나 이스케이프 코드가 있다면 모두 제거한 후 정보를 주고, json 문법에 맞게 출력해야해.'
+    SYSTEM_TEXT = "너는 여행사 투어 가이드야. 하루치 여행 일정을 짜야 해.\n출력은 오직 아래 예시와 동일한 형식의 JSON 데이터만 포함해야 하며, 추가 설명이나 이스케이프 코드는 절대 포함하면 안돼.\n각 여행 일정은 하나의 리스트로 구성되고, 전체 결과는 이러한 일정 리스트들을 포함하는 리스트여야 해.\n각 장소는 Python 딕셔너리 형식으로 표현하며, 반드시 다음 키들만 사용해: \"id\", \"name\", \"mapX\", \"mapY\".\n모든 중괄호와 대괄호는 반드시 올바르게 닫혀 있어야 하며, 유효한 JSON 문법을 따라야 해.\n출력 예시:\n[\n  [\n    {\"id\": \"0\", \"name\": \"A\", \"mapX\": \"126\", \"mapY\": \"37\"},\n    {\"id\": \"1\", \"name\": \"B\", \"mapX\": \"127\", \"mapY\": \"38\"}\n  ],\n  [\n    {\"id\": \"2\", \"name\": \"C\", \"mapX\": \"128\", \"mapY\": \"39\"}\n  ]\n]"
+    CONTENT_TEXT = ' 이 리스트를 보고 지역 일부만 골라서 하루치 여행 계획을 여러개 짜줘. 가장 이동하기 최적화된 루트로 짜줘.'
+    def __init__(self, model='claude-3-7-sonnet-20250219', ai_service_key=None, tour_service_key=None):
+        self.__model = model # ai_model 등록
+        self.__ai_service_key = self.set_ai_service_key(ai_service_key) # ai_api service key 등록
+        self.__tour_service_key = self.set_tour_service_key(tour_service_key) # tour_service key 등록
+        self.__place_list = [] # 장소 리스트 입니다.
+
+    def set_ai_service_key(self, service_key):
+        self.__ai_service_key = service_key
+        return self.__ai_service_key
+
+    def set_tour_service_key(self, tour_service_key):
+        self.__tour_service_key = tour_service_key
+        return self.__tour_service_key
+
+    def __get_area_based_tour_list(self, areaCode, contentTypeId, arrange, sigunguCode=None):
+        tour = TourApi(MobileOS=MobileOS.ANDROID, MobileApp='AiTourRecommender', service_key=self.__tour_service_key)
+        data = {
+            'areaCode': areaCode.value if isinstance(areaCode, Enum) else areaCode,
+            'contentTypeId': contentTypeId.value if isinstance(contentTypeId, Enum) else contentTypeId,
+            'arrange': arrange.value if isinstance(arrange, Enum) else arrange,
+        }
+        if sigunguCode is not None:
+            data['sigunguCode'] = sigunguCode
+        self.__place_list = tour.get_area_based_list(**data) # result 요소에는 Area 객체가 들어옵니다.
+        list = []
+        for i in range(len(self.__place_list)):
+            each = self.__place_list[i]
+            list.append({
+                'id': i,
+                'name': each.get_title(),
+                'mapX': each.get_mapX(),
+                'mapY': each.get_mapY(),
+            })
+
+        return list
+
+    def __get_location_based_tour_list(self, mapX, mapY, radius, **kwargs):
+        """
+        위치기반 데이터 가져오기
+        :return:
+        """
+        tour = TourApi(MobileOS=MobileOS.ANDROID, MobileApp='AiTourRecommender', service_key=self.__tour_service_key)
+        data = {
+            'mapX': mapX,
+            'mapY': mapY,
+            'radius': radius,
+        }
+        for each in kwargs.keys():
+            data[each] = kwargs[each].value if isinstance(kwargs[each], Enum) else kwargs[each]
+        self.__place_list = tour.get_location_based_list(**data) # result 요소에는 Area 객체가 들어옵니다.
+        list = []
+        for i in range(len(self.__place_list)):
+            each = self.__place_list[i]
+            list.append({
+                'id': i,
+                'name': each.get_title(),
+                'mapX': each.get_mapX(),
+                'mapY': each.get_mapY(),
+            })
+
+        return list
+
+
+    def __get_ai_comment(self, place_list):
+        """
+        실제 ai 코멘트를 받는 역할을 합니다.
+        :return:
+        """
+        system = self.SYSTEM_TEXT
+        content = str(place_list) + self.CONTENT_TEXT
+        client = anthropic.Anthropic(api_key=self.__ai_service_key)
+        message = client.messages.create(
+            model='claude-3-7-sonnet-20250219',
+            max_tokens=1000,
+            system=system,
+            messages=[
+                {
+                    "role": 'user',
+                    "content": [
+                        {
+                            'type': 'text',
+                            'text': content,
+                        }
+                    ]
+                }
+            ]
+        )
+        return message.content[0].text
+
+
+
+    def get_recommended_tour_list_based_area(self, areaCode=AreaCode.SEOUL, contentTypeId=ContentTypeId.GWANGWANGJI, arrange=Arrange.TITLE_IMAGE, sigunguCode=None):
+        """
+
+        :return: 파이썬 리스트를 반환합니다.
+        """
+        places = self.__get_area_based_tour_list(areaCode, contentTypeId, arrange, sigunguCode)
+        comment = self.__get_ai_comment(places)
+        # 문자열을 리스트로 변환
+        list = []
+        tour_list = ast.literal_eval(comment)
+        for i in range(len(tour_list)):
+            one_course = []
+            for j in range(len(tour_list[i])):
+                each = tour_list[i][j]
+                one_course.append(self.__place_list[int(each['id'])]) # 장소 추가
+            list.append(one_course) # 코스 추가
+
+        return list
+
+    def get_recommended_tour_list_based_location(self, mapX, mapY, radius, **kwargs):
+        places = self.__get_location_based_tour_list(mapX, mapY, radius, **kwargs)
+        if len(self.__place_list) == 0:
+            return []
+        comment = self.__get_ai_comment(places)
+        # 문자열을 리스트로 변환
+        list = []
+        tour_list = ast.literal_eval(comment)
+        for i in range(len(tour_list)):
+            one_course = []
+            for j in range(len(tour_list[i])):
+                each = tour_list[i][j]
+                one_course.append(self.__place_list[int(each['id'])])  # 장소 추가
+            list.append(one_course)  # 코스 추가
+
+        return list
