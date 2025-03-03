@@ -130,7 +130,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 아래는 celery setting을 담당합니다.
-ELERY_TIMEZONE = 'Asia/Seoul' # 서울로 시간을 설정합니다.
+CELERY_TIMEZONE = 'Asia/Seoul' # 서울로 시간을 설정합니다.
 CELERY_TASK_TRACK_STARTED = True # 작업 문제 보고를 위해 사용됩니다. 작업의 시작과 끝을 추적합니다.
 CELERY_RESULT_BACKEND = 'django-db' # 장고 설정의 데이터 베이스를 셀러리 결과 DB로 지정합니다.
 CELERY_BROKER_URL = env('CELERY_BROKER_URL') # env 파일로 부터 셀러리 url을 불러옵니다.
