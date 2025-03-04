@@ -1,6 +1,6 @@
 from celery import shared_task  # shared_task는 장고와 연관이 있는 작업일 때 사용하는 어노테이션 입니다.
-from modules.ai_recommender import AiTourRecommender
-from modules.tour_api import Arrange
+from .modules.ai_recommender import AiTourRecommender
+from .modules.tour_api import Arrange
 from config.settings import AI_SERVICE_KEY, PUBLIC_DATA_PORTAL_API_KEY
 from celery.signals import task_success, task_failure
 from channels.layers import get_channel_layer
@@ -15,13 +15,28 @@ def get_recommended_tour_based_area(group_name, area_code, content_type_id, arra
     global channel_group_name
     channel_group_name = group_name
     data = {
-        'area_code': area_code,
-        'content_type_id': content_type_id,
+        'areaCode': area_code,
+        'contentTypeId': content_type_id,
         'arrange': arrange,
     }
     if sigungu_code is not None:
-        data['sigungu_code'] = sigungu_code
+        data['sigunguCode'] = sigungu_code
     recommended_list = recommender.get_recommended_tour_list_based_area(**data)
+    for i in range(len(recommended_list)):
+        course = recommended_list[i]
+        for j in range(len(course)):
+            place = course[j]
+            data = {
+                'address': place.get_address(),
+                'areaCode': place.get_area_code(),
+                'contentId': place.get_contentId(),
+                'mapX': place.get_mapX(),
+                'mapY': place.get_mapY(),
+                'title': place.get_title(),
+                'image1': place.get_image1_url(),
+                'image2': place.get_image2_url(),
+            }
+            course[j] = data
     return recommended_list
 
 @task_success.connect
@@ -29,6 +44,7 @@ def task_success_handler(sender, result, **kwargs):
     """
         Celery 작업이 성공적으로 완료되었을 때 호출됨.
         """
+    print('success')
     task_id = sender.request.id # 작업 아이디를 가져옵니다.
 
     # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
