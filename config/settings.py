@@ -133,6 +133,15 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
+
 # 아래는 celery setting을 담당합니다.
 CELERY_TIMEZONE = 'Asia/Seoul' # 서울로 시간을 설정합니다.
 CELERY_TASK_TRACK_STARTED = True # 작업 문제 보고를 위해 사용됩니다. 작업의 시작과 끝을 추적합니다.
