@@ -6,11 +6,14 @@ from celery.signals import task_success, task_failure
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+channel_group_name = None # channel 그룹 이름입니다.
 
 @shared_task
-def get_recommended_tour_based_area(area_code, content_type_id, arrange=Arrange.TITLE_IMAGE, sigungu_code=None):
+def get_recommended_tour_based_area(group_name, area_code, content_type_id, arrange=Arrange.TITLE_IMAGE, sigungu_code=None):
     recommender = AiTourRecommender(ai_service_key=AI_SERVICE_KEY,
                                     tour_service_key=PUBLIC_DATA_PORTAL_API_KEY) # ai 투어 추천자 생성
+    global channel_group_name
+    channel_group_name = group_name
     data = {
         'area_code': area_code,
         'content_type_id': content_type_id,
@@ -31,7 +34,7 @@ def task_success_handler(sender, result, **kwargs):
     # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        f"task_{task_id}",
+        f"{channel_group_name}",
         {
             "type": "task_update",
             "message": {
@@ -52,7 +55,7 @@ def task_failure_handler(sender, exception, **kwargs):
     # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        f"task_{task_id}",
+        f"{channel_group_name}",
         {
             "type": "task_update",
             "message": {
