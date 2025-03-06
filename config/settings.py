@@ -9,12 +9,22 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import environ
+import os
 from pathlib import Path
+
+# .env 파일을 읽기 위한 객체 생성
+env = environ.Env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# env 파일을 읽습니다.
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# env 파일로부터 정보를 가져옵니다.
+AI_SERVICE_KEY = env('AI_SERVICE_KEY')
+PUBLIC_DATA_PORTAL_API_KEY = env('PUBLIC_DATA_PORTAL_API_KEY')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -38,6 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tour',
+    'django_celery_results',
+    'celery',
 ]
 
 MIDDLEWARE = [
@@ -122,3 +134,23 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
+
+# 아래는 celery setting을 담당합니다.
+CELERY_TIMEZONE = 'Asia/Seoul' # 서울로 시간을 설정합니다.
+CELERY_TASK_TRACK_STARTED = True # 작업 문제 보고를 위해 사용됩니다. 작업의 시작과 끝을 추적합니다.
+CELERY_RESULT_BACKEND = 'django-db' # 장고 설정의 데이터 베이스를 셀러리 결과 DB로 지정합니다.
+CELERY_BROKER_URL = env('CELERY_BROKER_URL') # env 파일로 부터 셀러리 url을 불러옵니다.
+CELERY_ACCEPT_CONTENT = ['application/json'] # 셀러리가 데이터를 받는 형식
+CELERY_RESULT_SERIALIZER = 'json' # 셀러리가 DB 에 결과를 저장하는 방식
+CELERY_TASK_SERIALIZER = 'json' # 셀러리가 테스크를 브로커로 보낼 때 어떤 직렬화 방식을 사용할지를 지정
+CELERY_BROKER_CONNECTION_RETRY = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
