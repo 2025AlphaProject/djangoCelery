@@ -121,20 +121,23 @@ def store_near_events():
                 # 데이터가 뒤로갈수록 오래된 이벤트 정보이므로 바로 break문 걸어서 종료 시켜도 무방
                 flag = True
                 break
-            # 이벤트를 만듭니다.
-            try:
-                Event.objects.get(title=each['TITLE'])
-            except Event.DoesNotExist: # 이벤트가 등록되지 않았다면
-                Event.objects.create(
-                    category=each['CODENAME'],
-                    gu_name=each['GUNAME'],
-                    title=each['TITLE'],
-                    img_url=each['MAIN_IMG'],
-                    start_date=each['STARTDATE'].split()[0],
-                    end_date=each['END_DATE'].split()[0],
-                    mapX=float(each['LAT']),
-                    mapY=float(each['LOT']),
-                )
+            # 이벤트를 만듭니다. 같은 제목의 이름이 같으면 pass
+            Event.objects.get_or_create(
+                title=each['TITLE'],
+                defaults={
+                    'category': each['CODENAME'],
+                    'gu_name': each['GUNAME'],
+                    'title': each['TITLE'],
+                    'img_url': each['MAIN_IMG'],
+                    'start_date': each['STARTDATE'].split()[0],
+                    'end_date': each['END_DATE'].split()[0],
+                    'mapX': float(each['LAT']),
+                    'mapY': float(each['LOT']),
+                    'homepage_url': each['HOMEPAGE']
+
+                }
+            )
+
         if flag: break
 
 
