@@ -13,6 +13,8 @@ import environ
 import os
 from pathlib import Path
 
+from celery.schedules import crontab
+
 # .env 파일을 읽기 위한 객체 생성
 env = environ.Env()
 
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
     'tour',
     'django_celery_results',
     'celery',
+    'django_celery_beat'
 ]
 
 MIDDLEWARE = [
@@ -167,3 +170,21 @@ CELERY_RESULT_SERIALIZER = 'json' # 셀러리가 DB 에 결과를 저장하는 �
 CELERY_TASK_SERIALIZER = 'json' # 셀러리가 테스크를 브로커로 보낼 때 어떤 직렬화 방식을 사용할지를 지정
 CELERY_BROKER_CONNECTION_RETRY = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# 셀러리 스케쥴 시간을 설정합니다.
+CELERY_BEAT_SCHEDULE = {
+    'remove_old_events': {
+        'task': 'tour.tasks.remove_old_events',
+        'schedule': crontab(hour='0', minute='0'), # 매 자정에 실행됩니다.
+        'options': {
+            'expires': 10 # 10초내에 실행되지 않으면 만료됩니다.
+        }
+    },
+    'store_near_events':{
+        'task': 'tour.tasks.store_near_events',
+        'schedule': crontab(hour='0', minute='0'),
+        'options': {
+            'expires': 60 # 60초 내에 실행되지 않으면 만료됩니다.
+        }
+    }
+}
