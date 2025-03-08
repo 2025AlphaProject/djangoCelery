@@ -177,14 +177,14 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'tour.tasks.remove_old_events',
         'schedule': crontab(hour='0', minute='0'), # 매 자정에 실행됩니다.
         'options': {
-            'expires': 10 # 10초내에 실행되지 않으면 만료됩니다.
+            'expires': 300 # 300초내에 실행되지 않으면 만료됩니다.
         }
     },
     'store_near_events':{
         'task': 'tour.tasks.store_near_events',
         'schedule': crontab(hour='0', minute='0'),
         'options': {
-            'expires': 60 # 60초 내에 실행되지 않으면 만료됩니다.
+            'expires': 300 # 300초 내에 실행되지 않으면 만료됩니다.
         }
     }
 }
