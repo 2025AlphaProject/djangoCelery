@@ -90,6 +90,14 @@ def task_failure_handler(sender, exception, **kwargs):
         )
 
 @shared_task
+def remove_old_events():
+    """
+    오래된 이벤트 정보는 삭제를 진행합니다.
+    """
+    today = datetime.date.today()
+    Event.objects.filter(end_date__lt=today).delete() # 이벤트 마지막 날짜보다 작을 경우 데이터 삭제 진행
+
+@shared_task
 def store_near_events():
     # API 연결
     SEOUL_DATA_BASE_URL = 'http://openapi.seoul.go.kr:8088'
@@ -109,7 +117,8 @@ def store_near_events():
         # 정보 저장
         data_list = response.json()['culturalEventInfo']['row']
         for each in data_list:
-            if datetime.datetime.strptime(each['STARTDATE'].split()[0], '%Y-%m-%d') < today: # 이벤트가 과거 정보라면
+            if datetime.datetime.strptime(each['END_DATE'].split()[0], '%Y-%m-%d') < today: # 이벤트가 과거 정보라면
+                # 데이터가 뒤로갈수록 오래된 이벤트 정보이므로 바로 break문 걸어서 종료 시켜도 무방
                 flag = True
                 break
             # 이벤트를 만듭니다.
