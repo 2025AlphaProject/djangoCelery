@@ -88,3 +88,44 @@ def task_failure_handler(sender, exception, **kwargs):
                 },
             },
         )
+
+@shared_task
+def store_near_events():
+    # API 연결
+    SEOUL_DATA_BASE_URL = 'http://openapi.seoul.go.kr:8088'
+    response_type = 'json'
+    service_name = 'culturalEventInfo'
+    start_index = 1
+    url = SEOUL_DATA_BASE_URL + f'/{SEOUL_PUBLIC_DATA_SERVICE_KEY}/{response_type}/{service_name}'
+    # list_total_count 정보를 위해 정보 하나만 가져옵니다.
+    response = requests.get(url + '/1/1/')
+    list_total_count = response.json()['culturalEventInfo']['list_total_count'] # 총 리스트 갯수를 나타냅니다.
+    # api로부터 정보 50개씩 가져옵니다.
+    how_many = 50 # 정보 갯수
+    flag = False # 각 정보가 오늘 날짜보다 과거일 경우 True로 변환하여 for문을 빠져나갑니다.
+    today = datetime.date.today() # 오늘 날짜를 가져옵니다.
+    for i in range(start_index, list_total_count, how_many):
+        response = requests.get(url + f'/{i}/{i + how_many - 1}/')
+        # 정보 저장
+        data_list = response.json()['culturalEventInfo']['row']
+        for each in data_list:
+            if datetime.datetime.strptime(each['STARTDATE'].split()[0], '%Y-%m-%d') < today: # 이벤트가 과거 정보라면
+                flag = True
+                break
+            # 이벤트를 만듭니다.
+            Event.objects.create(
+                category=each['CODENAME'],
+                gu_name=each['GUNAME'],
+                title=each['TITLE'],
+                img_url=each['MAIN_IMG'],
+                start_date=each['STARTDATE'].split()[0],
+                end_date=each['END_DATE'].split()[0],
+                mapX=float(each['LAT']),
+                mapY=float(each['LOT']),
+            )
+        if flag: break
+
+
+
+
+    # DB에 데이터 저장
