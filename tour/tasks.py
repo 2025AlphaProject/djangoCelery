@@ -122,16 +122,19 @@ def store_near_events():
                 flag = True
                 break
             # 이벤트를 만듭니다.
-            Event.objects.create(
-                category=each['CODENAME'],
-                gu_name=each['GUNAME'],
-                title=each['TITLE'],
-                img_url=each['MAIN_IMG'],
-                start_date=each['STARTDATE'].split()[0],
-                end_date=each['END_DATE'].split()[0],
-                mapX=float(each['LAT']),
-                mapY=float(each['LOT']),
-            )
+            try:
+                Event.objects.get(title=each['TITLE'])
+            except Event.DoesNotExist: # 이벤트가 등록되지 않았다면
+                Event.objects.create(
+                    category=each['CODENAME'],
+                    gu_name=each['GUNAME'],
+                    title=each['TITLE'],
+                    img_url=each['MAIN_IMG'],
+                    start_date=each['STARTDATE'].split()[0],
+                    end_date=each['END_DATE'].split()[0],
+                    mapX=float(each['LAT']),
+                    mapY=float(each['LOT']),
+                )
         if flag: break
 
 
