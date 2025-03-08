@@ -1,4 +1,6 @@
-FROM ubuntu:latest
-LABEL authors="ytk03"
+FROM python:3.12
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /code
+COPY ./requirements.txt /code/
+RUN pip install -r requirements.txt
+COPY . /code/
