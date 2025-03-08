@@ -1,10 +1,16 @@
 from celery import shared_task  # shared_task는 장고와 연관이 있는 작업일 때 사용하는 어노테이션 입니다.
+from django.template.defaultfilters import title
+
 from .modules.ai_recommender import AiTourRecommender
 from .modules.tour_api import Arrange
 from config.settings import AI_SERVICE_KEY, PUBLIC_DATA_PORTAL_API_KEY
 from celery.signals import task_success, task_failure
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+import requests
+from config.settings import SEOUL_PUBLIC_DATA_SERVICE_KEY
+from .models import Event
+import datetime
 
 channel_group_name = None # channel 그룹 이름입니다.
 
@@ -43,41 +49,42 @@ def get_recommended_tour_based_area(group_name, area_code, content_type_id, arra
 def task_success_handler(sender, result, **kwargs):
     """
         Celery 작업이 성공적으로 완료되었을 때 호출됨.
-        """
-    print('success')
-    task_id = sender.request.id # 작업 아이디를 가져옵니다.
+    """
+    if sender.name == 'app.tasks.get_recommended_tour_based_area':
+        task_id = sender.request.id # 작업 아이디를 가져옵니다.
 
-    # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        f"{channel_group_name}",
-        {
-            "type": "task_update",
-            "message": {
-                "task_id": task_id,
-                "status": "SUCCESS",
-                "result": result,
+        # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"{channel_group_name}",
+            {
+                "type": "task_update",
+                "message": {
+                    "task_id": task_id,
+                    "status": "SUCCESS",
+                    "result": result,
+                },
             },
-        },
-    )
+        )
 
 @task_failure.connect
 def task_failure_handler(sender, exception, **kwargs):
     """
     Celery 작업이 실패했을 때 호출됨.
     """
-    task_id = sender.request.id
+    if sender.name == 'app.tasks.get_recommended_tour_based_area':
+        task_id = sender.request.id
 
-    # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        f"{channel_group_name}",
-        {
-            "type": "task_update",
-            "message": {
-                "task_id": task_id,
-                "status": "FAILURE",
-                "result": str(exception),
+        # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"{channel_group_name}",
+            {
+                "type": "task_update",
+                "message": {
+                    "task_id": task_id,
+                    "status": "FAILURE",
+                    "result": str(exception),
+                },
             },
-        },
-    )
+        )
