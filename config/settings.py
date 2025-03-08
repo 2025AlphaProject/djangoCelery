@@ -25,6 +25,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # env 파일로부터 정보를 가져옵니다.
 AI_SERVICE_KEY = env('AI_SERVICE_KEY')
 PUBLIC_DATA_PORTAL_API_KEY = env('PUBLIC_DATA_PORTAL_API_KEY')
+SEOUL_PUBLIC_DATA_SERVICE_KEY = env('SEOUL_PUBLIC_DATA_SERVICE_KEY') # 서울 열린데이터 광장 서비스 키
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
