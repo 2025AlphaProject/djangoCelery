@@ -50,7 +50,7 @@ def task_success_handler(sender, result, **kwargs):
     """
         Celery 작업이 성공적으로 완료되었을 때 호출됨.
     """
-    if sender.name == 'app.tasks.get_recommended_tour_based_area':
+    if sender.name == 'tour.tasks.get_recommended_tour_based_area':
         task_id = sender.request.id # 작업 아이디를 가져옵니다.
 
         # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
@@ -117,7 +117,7 @@ def store_near_events():
         # 정보 저장
         data_list = response.json()['culturalEventInfo']['row']
         for each in data_list:
-            if datetime.datetime.strptime(each['END_DATE'].split()[0], '%Y-%m-%d') < today: # 이벤트가 과거 정보라면
+            if datetime.datetime.strptime(each['END_DATE'].split()[0], '%Y-%m-%d').date() < today: # 이벤트가 과거 정보라면
                 # 데이터가 뒤로갈수록 오래된 이벤트 정보이므로 바로 break문 걸어서 종료 시켜도 무방
                 flag = True
                 break
@@ -129,11 +129,11 @@ def store_near_events():
                     'gu_name': each['GUNAME'],
                     'title': each['TITLE'],
                     'img_url': each['MAIN_IMG'],
-                    'start_date': each['STARTDATE'].split()[0],
+                    'start_date': each['STRTDATE'].split()[0],
                     'end_date': each['END_DATE'].split()[0],
                     'mapX': float(each['LAT']),
                     'mapY': float(each['LOT']),
-                    'homepage_url': each['HOMEPAGE']
+                    'homepage_url': each['HMPG_ADDR']
 
                 }
             )
