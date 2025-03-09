@@ -1,5 +1,4 @@
 from celery import shared_task  # shared_task는 장고와 연관이 있는 작업일 때 사용하는 어노테이션 입니다.
-from django.template.defaultfilters import title
 
 from .modules.ai_recommender import AiTourRecommender
 from .modules.tour_api import Arrange
