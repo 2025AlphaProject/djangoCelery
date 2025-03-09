@@ -72,7 +72,7 @@ def task_failure_handler(sender, exception, **kwargs):
     """
     Celery 작업이 실패했을 때 호출됨.
     """
-    if sender.name == 'app.tasks.get_recommended_tour_based_area':
+    if sender.name == 'tour.tasks.get_recommended_tour_based_area':
         task_id = sender.request.id
 
         # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
