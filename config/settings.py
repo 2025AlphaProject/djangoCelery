@@ -13,6 +13,8 @@ import environ
 import os
 from pathlib import Path
 
+from celery.schedules import crontab
+
 # .env 파일을 읽기 위한 객체 생성
 env = environ.Env()
 
@@ -25,6 +27,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # env 파일로부터 정보를 가져옵니다.
 AI_SERVICE_KEY = env('AI_SERVICE_KEY')
 PUBLIC_DATA_PORTAL_API_KEY = env('PUBLIC_DATA_PORTAL_API_KEY')
+SEOUL_PUBLIC_DATA_SERVICE_KEY = env('SEOUL_PUBLIC_DATA_SERVICE_KEY') # 서울 열린데이터 광장 서비스 키
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -50,6 +53,7 @@ INSTALLED_APPS = [
     'tour',
     'django_celery_results',
     'celery',
+    'django_celery_beat'
 ]
 
 MIDDLEWARE = [
@@ -166,3 +170,21 @@ CELERY_RESULT_SERIALIZER = 'json' # 셀러리가 DB 에 결과를 저장하는 �
 CELERY_TASK_SERIALIZER = 'json' # 셀러리가 테스크를 브로커로 보낼 때 어떤 직렬화 방식을 사용할지를 지정
 CELERY_BROKER_CONNECTION_RETRY = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# 셀러리 스케쥴 시간을 설정합니다.
+CELERY_BEAT_SCHEDULE = {
+    'remove_old_events': {
+        'task': 'tour.tasks.remove_old_events',
+        'schedule': crontab(hour='0', minute='0'), # 매 자정에 실행됩니다.
+        'options': {
+            'expires': 300 # 300초내에 실행되지 않으면 만료됩니다.
+        }
+    },
+    'store_near_events':{
+        'task': 'tour.tasks.store_near_events',
+        'schedule': crontab(hour='0', minute='0'),
+        'options': {
+            'expires': 300 # 300초 내에 실행되지 않으면 만료됩니다.
+        }
+    }
+}
