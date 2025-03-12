@@ -38,7 +38,7 @@ class AiTourRecommender:
     위에서 예시 답변을 보면 알겠지만, 각 여행 코스에 해당하는 장소들 묶음은 하나의 리스트, 하나의 리스트 안에 있는 장소들은 딕셔너리 형태, 모든 여행 코스들은 리스트에 담아서 출력할거야. 또한, 반드시 이스케이프 코드는 제거해줘야해.
     """
     CONTENT_TEXT = """
-    \n이 리스트를 보고 몇가지의 장소들만 추려서 하루치 여행 코스를 짜줘. 각 여행지간의 동선은 최대한 짧게 적용했으면 좋겠어. 또한, 답변을 제시할 때, 같은 여행 장소가 두번 이상 들어가면 안돼.
+    \n이 리스트를 보고 몇가지의 장소들만 추려서 하루치 여행 코스를 최소 3가지 경우 이상 짜줘. 각 여행지간의 동선은 최대한 짧게 적용했으면 좋겠어. 또한, 답변을 제시할 때, 같은 여행 장소가 두번 이상 들어가면 안돼.
     """
     def __init__(self, model='claude-3-7-sonnet-20250219', ai_service_key=None, tour_service_key=None):
         self.__model = model # ai_model 등록
@@ -115,7 +115,7 @@ class AiTourRecommender:
         client = anthropic.Anthropic(api_key=self.__ai_service_key)
         message = client.messages.create(
             model='claude-3-7-sonnet-20250219',
-            max_tokens=1000,
+            max_tokens=10000,
             system=system,
             messages=[
                 {
@@ -151,12 +151,15 @@ class AiTourRecommender:
 
 
 
-    def get_recommended_tour_list_based_area(self, user_id, areaCode=AreaCode.SEOUL, contentTypeId=ContentTypeId.GWANGWANGJI, arrange=Arrange.TITLE_IMAGE, sigunguCode=None):
+    def get_recommended_tour_list_based_area(self, user_id, areaCode=AreaCode.SEOUL, arrange=Arrange.TITLE_IMAGE, sigunguCode=None):
         """
 
         :return: 파이썬 리스트를 반환합니다.
         """
-        places = self.__get_area_based_tour_list(areaCode, contentTypeId, arrange, sigunguCode)
+        places = self.__get_area_based_tour_list(areaCode, ContentTypeId.GWANGWANGJI, arrange, sigunguCode) # 관광지 정보 추가
+        places += self.__get_area_based_tour_list(areaCode, ContentTypeId.LEIPORTS, arrange, sigunguCode) # 레포츠 정보 추가
+        places += self.__get_area_based_tour_list(areaCode, ContentTypeId.MUNHWASISUL, arrange, sigunguCode) # 문화 시설
+        places += self.__get_area_based_tour_list(areaCode, ContentTypeId.SHOPPING, arrange, sigunguCode) # 쇼핑 정보
         self.__additional_comment = self.__get_personal_comment(user_id)
         comment = self.__get_ai_comment(places)
         # 문자열을 리스트로 변환
