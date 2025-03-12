@@ -2,6 +2,7 @@ import anthropic
 
 from .tour_api import *
 import ast
+from usr.models import User
 
 
 
@@ -44,6 +45,7 @@ class AiTourRecommender:
         self.__ai_service_key = self.set_ai_service_key(ai_service_key) # ai_api service key 등록
         self.__tour_service_key = self.set_tour_service_key(tour_service_key) # tour_service key 등록
         self.__place_list = [] # 장소 리스트 입니다.
+        self.__additional_comment = '' # 추가 프롬프팅 텍스트입니다.
 
     def set_ai_service_key(self, service_key):
         self.__ai_service_key = service_key
@@ -108,7 +110,8 @@ class AiTourRecommender:
         :return:
         """
         system = self.SYSTEM_TEXT
-        content = str(place_list) + self.CONTENT_TEXT
+        content = str(place_list) + self.CONTENT_TEXT + self.__additional_comment
+        print(self.__additional_comment)
         client = anthropic.Anthropic(api_key=self.__ai_service_key)
         message = client.messages.create(
             model='claude-3-7-sonnet-20250219',
@@ -129,14 +132,32 @@ class AiTourRecommender:
         print(message.content[0].text)
         return message.content[0].text
 
+    def __get_personal_comment(self, user_id):
+        """
+        Ai 프롬프팅에 넣을 사용자 맞춤 정보를 설정합니다.
+        """
+        user = None
+        try:
+            user = User.objects.get(sub=user_id)
+        except User.DoesNotExist:
+            return ""
+        if user is not None:
+            return f"""
+            사용자의 나이대와 성별 정보는 다음과 같아. 다음 정보를 보고 나이대와 성별에 맞게 장소 추천을 해줬으면 좋겠어.
+            참고로 나이대는 예를들어서 1세이상 9세 이하면 1~9로 표기돼.\n
+            나이대: {user.age_range}, 성별: {user.gender}
+            """
 
 
-    def get_recommended_tour_list_based_area(self, areaCode=AreaCode.SEOUL, contentTypeId=ContentTypeId.GWANGWANGJI, arrange=Arrange.TITLE_IMAGE, sigunguCode=None):
+
+
+    def get_recommended_tour_list_based_area(self, user_id, areaCode=AreaCode.SEOUL, contentTypeId=ContentTypeId.GWANGWANGJI, arrange=Arrange.TITLE_IMAGE, sigunguCode=None):
         """
 
         :return: 파이썬 리스트를 반환합니다.
         """
         places = self.__get_area_based_tour_list(areaCode, contentTypeId, arrange, sigunguCode)
+        self.__additional_comment = self.__get_personal_comment(user_id)
         comment = self.__get_ai_comment(places)
         # 문자열을 리스트로 변환
         list = []
@@ -150,10 +171,11 @@ class AiTourRecommender:
 
         return list
 
-    def get_recommended_tour_list_based_location(self, mapX, mapY, radius, **kwargs):
+    def get_recommended_tour_list_based_location(self, user_id, mapX, mapY, radius, **kwargs):
         places = self.__get_location_based_tour_list(mapX, mapY, radius, **kwargs)
         if len(self.__place_list) == 0:
             return []
+        self.__additional_comment = self.__get_personal_comment(user_id)
         comment = self.__get_ai_comment(places)
         # 문자열을 리스트로 변환
         list = []
