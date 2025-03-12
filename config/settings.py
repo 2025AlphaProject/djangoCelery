@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tour',
+    'usr',
     'django_celery_results',
     'celery',
     'django_celery_beat'
@@ -85,6 +86,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+
+AUTH_USER_MODEL = 'usr.User' # usr의 User를 기본 auth 모델로 적용
 
 
 # Database
