@@ -42,8 +42,8 @@ class AiTourRecommender:
     # \n이 리스트를 보고 대한민국에서 가장 유명한 장소들만 골라서 여행 경로를 구성해줘. 여행 경로는 최소 4가지 였으면 좋겠어.
     # """
     CONTENT_TEXT = """
-    \n이 리스트에는 각각 관광, 레포츠, 문화, 쇼핑, 숙박 시설 정보가 들어있는 리스트가 있어. 숙박 시설 정보를 제외한 나머지 시설은 대한민국에서 유명한 시설들만 골라서 여행 코스를 구성해줘.
-    대한민국에서 유명한 장소들만 골라서 하루치 여행 코스를 기획했다면, 각 장소들이 위도, 경도를 기준으로 이동하기 가장 적합하도록 장소 순서를 다시 재배치해줘. 숙박 시설은 한 여행 코스를 구성하는 장소들과 가장 가까운 장소들로 해주고, 숙박 시설은 각 여행 코스 맨 마지막에 배치해줘.
+    \n이 리스트에는 각각 관광, 레포츠, 문화, 쇼핑 시설 정보가 들어있는 리스트가 있어. 각 시설 리스트에서 대한민국에서 유명한 시설들만 적절히 골라서 여행 코스를 구성해줘.
+    대한민국에서 유명한 장소들만 골라서 하루치 여행 코스를 기획했다면, 각 장소들이 위도, 경도를 기준으로 이동하기 가장 적합하도록 장소 순서를 다시 재배치해줘.
     각 여행코스 리스트 안의 index 순서가 여행 순서야.
     여행 코스는 최소 4가지 경우 이상으로 구성했으면 좋겠고, 한 여행 코스에는 같은 장소가 반복되면 안돼.
     """
@@ -169,7 +169,7 @@ class AiTourRecommender:
         places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.LEIPORTS, arrange, sigunguCode)) # 레포츠 정보 추가
         places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.MUNHWASISUL, arrange, sigunguCode)) # 문화 시설
         places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.SHOPPING, arrange, sigunguCode)) # 쇼핑 정보
-        places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.SUKBAK, arrange, sigunguCode))  # 숙박 정보
+        # places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.SUKBAK, arrange, sigunguCode))  # 숙박 정보
         self.__additional_comment = self.__get_personal_comment(user_id)
         comment = self.__get_ai_comment(places)
         # 문자열을 리스트로 변환
