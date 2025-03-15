@@ -212,7 +212,7 @@ class TourApi:
         parameters['mobileOS'] = self.MobileOS
         parameters['mobileApp'] = self.MobileApp
         parameters['_type'] = 'json'
-        parameters['numOfRows'] = 30 # 디폴트로 30개로 제한
+        parameters['numOfRows'] = 100 # 디폴트로 30개로 제한
         return parameters
 
     def get_sigungu_code_list(self, areaCode):

@@ -39,7 +39,6 @@ def get_recommended_tour_based_area(group_name, area_code, arrange=Arrange.TITLE
                 'mapY': place.get_mapY(),
                 'title': place.get_title(),
                 'image1': place.get_image1_url(),
-                'image2': place.get_image2_url(),
             }
             course[j] = data
     return recommended_list
