@@ -67,10 +67,13 @@ class AiTourRecommender:
             'contentTypeId': contentTypeId.value if isinstance(contentTypeId, Enum) else contentTypeId,
             'arrange': arrange.value if isinstance(arrange, Enum) else arrange,
         }
-        if sigunguCode is not None:
-            data['sigunguCode'] = sigunguCode
         st_index = len(self.__place_list)
-        self.__place_list += tour.get_area_based_list(**data) # result 요소에는 Area 객체가 들어옵니다.
+        if sigunguCode is not None:
+            for each in sigunguCode:
+                data['sigunguCode'] = each
+                self.__place_list += tour.get_area_based_list(**data)
+        else:
+            self.__place_list += tour.get_area_based_list(**data) # result 요소에는 Area 객체가 들어옵니다.
         list = []
         for i in range(st_index, len(self.__place_list)):
             each = self.__place_list[i]
@@ -80,7 +83,6 @@ class AiTourRecommender:
                 'mapX': each.get_mapX(),
                 'mapY': each.get_mapY(),
             })
-
         return list # 정보 구분 위해 리스트로 감쌉니다.
 
     def __get_location_based_tour_list(self, mapX, mapY, radius, **kwargs):
