@@ -74,10 +74,10 @@ class AiTourRecommender:
         }
         if sigunguCode is not None:
             data['sigunguCode'] = sigunguCode
+        st_index = len(self.__place_list)
         self.__place_list += tour.get_area_based_list(**data) # result 요소에는 Area 객체가 들어옵니다.
-        print(self.__place_list)
         list = []
-        for i in range(len(self.__place_list)):
+        for i in range(st_index, len(self.__place_list)):
             each = self.__place_list[i]
             list.append({
                 'id': i,
@@ -86,7 +86,7 @@ class AiTourRecommender:
                 'mapY': each.get_mapY(),
             })
 
-        return [list] # 정보 구분 위해 리스트로 감쌉니다.
+        return list # 정보 구분 위해 리스트로 감쌉니다.
 
     def __get_location_based_tour_list(self, mapX, mapY, radius, **kwargs):
         """
@@ -134,7 +134,7 @@ class AiTourRecommender:
             return ""
         if user is not None:
             return f"""
-            사용자의 나이대와 성별 정보는 다음과 같아. 다음 정보를 보고 나이대와 성별에 맞게 장소 추천을 해줬으면 좋겠어.
+            사용자의 나이대와 성별 정보는 다음과 같아. 다음 정보를 보고 나이대와 성별에 맞게 장소 추천을 해줘.
             참고로 나이대는 예를들어서 1세이상 9세 이하면 1~9로 표기돼.\n
             나이대: {user.age_range}, 성별: {user.gender}
             """
