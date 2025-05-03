@@ -14,7 +14,7 @@ import datetime
 channel_group_name = None # channel 그룹 이름입니다.
 
 @shared_task
-def get_recommended_tour_based_area(group_name, area_code, arrange=Arrange.TITLE_IMAGE, sigungu_code=None):
+def get_recommended_tour_based_area(group_name, area_code, days, arrange=Arrange.TITLE_IMAGE, sigungu_code=None):
     recommender = AiTourRecommender(ai_service_key=AI_SERVICE_KEY,
                                     tour_service_key=PUBLIC_DATA_PORTAL_API_KEY) # ai 투어 추천자 생성
     global channel_group_name
@@ -22,6 +22,7 @@ def get_recommended_tour_based_area(group_name, area_code, arrange=Arrange.TITLE
     data = {
         'areaCode': area_code,
         'arrange': arrange,
+        'days': days,
     }
     if sigungu_code is not None:
         data['sigunguCode'] = sigungu_code
