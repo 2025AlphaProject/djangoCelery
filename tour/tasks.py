@@ -25,7 +25,7 @@ def get_recommended_tour_based_area(group_name, area_code, arrange=Arrange.TITLE
     }
     if sigungu_code is not None:
         data['sigunguCode'] = sigungu_code
-    data['user_id'] = int(group_name)
+    data['user_id'] = int(group_name.split('_')[0])
     recommended_list = recommender.get_recommended_tour_list_based_area(**data)
     for i in range(len(recommended_list)):
         course = recommended_list[i]
