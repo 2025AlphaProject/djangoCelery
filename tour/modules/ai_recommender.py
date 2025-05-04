@@ -5,6 +5,9 @@ import ast
 from usr.models import User
 from .ai_models.ai_service import get_ai_response
 from .ai_models import claude_ai, deepseek_ai, gemini_ai
+from config.settings import APP_LOGGER
+import logging
+logger = logging.getLogger(APP_LOGGER)
 
 
 
@@ -156,17 +159,22 @@ class AiTourRecommender:
         self.__additional_comment = self.__get_days_comment()
         self.__additional_comment += self.__get_personal_comment(user_id)
         comment = self.__get_ai_comment(places)
-        # 문자열을 리스트로 변환
-        list = []
-        tour_list = ast.literal_eval(comment)
-        for i in range(len(tour_list)):
-            one_course = []
-            for j in range(len(tour_list[i])):
-                each = tour_list[i][j]
-                one_course.append(self.__place_list[int(each['id'])]) # 장소 추가
-            list.append(one_course) # 코스 추가
+        try:
+            # 문자열을 리스트로 변환
+            list = []
+            tour_list = ast.literal_eval(comment)
+            for i in range(len(tour_list)):
+                one_course = []
+                for j in range(len(tour_list[i])):
+                    each = tour_list[i][j]
+                    one_course.append(self.__place_list[int(each['id'])]) # 장소 추가
+                list.append(one_course) # 코스 추가
 
-        return list
+            return list
+        except Exception as e:
+            logger.error(e)
+            raise Exception(e)
+
 
     def get_recommended_tour_list_based_location(self, user_id, mapX, mapY, radius, **kwargs):
         places = self.__get_location_based_tour_list(mapX, mapY, radius, **kwargs)
