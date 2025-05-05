@@ -131,12 +131,15 @@ class AiTourRecommender:
             user = User.objects.get(sub=user_id)
         except User.DoesNotExist:
             return ""
-        if user is not None:
-            return f"""
-            사용자의 나이대와 성별 정보는 다음과 같아. 다음 정보를 보고 나이대와 성별에 맞게 장소 추천을 해줘.
-            참고로 나이대는 예를들어서 1세이상 9세 이하면 1~9로 표기돼.\n
-            나이대: {user.age_range}, 성별: {user.gender}
-            """
+        if user.gender is None or user.gender == '' or user.age_range is None or user.age_range == '':
+            logger.info(f'user {user_id} does not have age_range or gender information')
+            return ""
+        # 유저 정보가 모두 갖춰져 있는 상태라면
+        return f"""
+                    사용자의 나이대와 성별 정보는 다음과 같아. 다음 정보를 보고 나이대와 성별에 맞게 장소 추천을 해줘.
+                    참고로 나이대는 예를들어서 1세이상 9세 이하면 1~9로 표기돼.\n
+                    나이대: {user.age_range}, 성별: {user.gender}
+                """
 
     def __get_days_comment(self):
         return f"여행 코스는 반드시 {self.days}가지 경우로 구성했으면 좋겠고, 한 여행 코스에는 최소 5가지 장소가 들어갔으면 좋겠고, 같은 장소가 반복되면 안돼.\n"
