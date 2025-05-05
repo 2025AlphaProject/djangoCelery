@@ -191,3 +191,52 @@ CELERY_BEAT_SCHEDULE = {
         }
     }
 }
+# 아래는 로그 설정입니다.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False, # 기본 로거 설정 유지
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{', # str.format
+        },
+        'simple': {
+            'format': '{name} {levelname} {asctime} {message}',
+            'style': '{',
+        },
+        'logstash': {
+            '()': 'logstash_formatter.LogstashFormatterV1',
+        },
+    },
+    'handlers': { # 로그 핸들러 설정
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'info.log',
+            'formatter': 'verbose',
+            'encoding': 'utf-8'
+        },
+        'logstash': {
+            'level': 'INFO',
+            'class': 'config.tcp_log_handler.TCPLogstashHandler',
+            'host': env('LOGSTASH_HOST'),
+            'port': 3306,
+            'formatter': 'logstash'
+        }
+    },
+    'loggers': { # 로거 설정, 실제 get_logger를 이용하여 로그 설정 가져옴
+        'django': { # 실제 배포 환경에서 사용하는 로거
+            'handlers': ['logstash'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django_debug': { # 디버그시 사용하는 로거
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        }
+    }
+}
+
+# 앱 기본 로거 설정
+APP_LOGGER='django'

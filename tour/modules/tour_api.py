@@ -1,3 +1,5 @@
+from requests.exceptions import JSONDecodeError
+
 import requests
 from enum import Enum
 
@@ -346,9 +348,12 @@ class TourApi:
                     parameters[each] = kwargs[each]
         response = requests.get(BASE_URL + uri, params=parameters)
         if response.status_code == 200:
-            if response.json()['response']['body']['totalCount'] == 0: # 컨텐츠가 없으면 빈 리스트 반환
-                return []
-            return Area.from_raw_list_to_area_list(response.json()['response']['body']['items']['item'])
+            try:
+                if response.json()['response']['body']['totalCount'] == 0: # 컨텐츠가 없으면 빈 리스트 반환
+                    return []
+                return Area.from_raw_list_to_area_list(response.json()['response']['body']['items']['item'])
+            except JSONDecodeError: # api 한도 초과시
+                raise Exception("API 한도 초과 혹은 관광 api 서버 오류")
         return None
 
     def get_image_urls(self, contentId):

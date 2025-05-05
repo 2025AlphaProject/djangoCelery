@@ -7,14 +7,17 @@ from celery.signals import task_success, task_failure
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import requests
-from config.settings import SEOUL_PUBLIC_DATA_SERVICE_KEY
+from config.settings import SEOUL_PUBLIC_DATA_SERVICE_KEY, APP_LOGGER
 from .models import Event
 import datetime
+import logging
+logger = logging.getLogger(APP_LOGGER)
 
 channel_group_name = None # channel 그룹 이름입니다.
 
 @shared_task
-def get_recommended_tour_based_area(group_name, area_code, arrange=Arrange.TITLE_IMAGE, sigungu_code=None):
+def get_recommended_tour_based_area(group_name, area_code, days, arrange=Arrange.TITLE_IMAGE, sigungu_code=None):
+    logger.info(f'received tour recommend request, channel_id: {group_name}')
     recommender = AiTourRecommender(ai_service_key=AI_SERVICE_KEY,
                                     tour_service_key=PUBLIC_DATA_PORTAL_API_KEY) # ai 투어 추천자 생성
     global channel_group_name
@@ -22,10 +25,16 @@ def get_recommended_tour_based_area(group_name, area_code, arrange=Arrange.TITLE
     data = {
         'areaCode': area_code,
         'arrange': arrange,
+        'days': days,
     }
     if sigungu_code is not None:
         data['sigunguCode'] = sigungu_code
-    data['user_id'] = int(group_name)
+    user_id = None
+    if len(group_name.split('_')) > 1:
+        user_id = int(group_name.split('_')[0])
+    else:
+        user_id = int(group_name)
+    data['user_id'] = int(user_id)
     recommended_list = recommender.get_recommended_tour_list_based_area(**data)
     for i in range(len(recommended_list)):
         course = recommended_list[i]
@@ -49,6 +58,7 @@ def task_success_handler(sender, result, **kwargs):
         Celery 작업이 성공적으로 완료되었을 때 호출됨.
     """
     if sender.name == 'tour.tasks.get_recommended_tour_based_area':
+        logger.info(f'task success: {sender.request.id}')
         task_id = sender.request.id # 작업 아이디를 가져옵니다.
 
         # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
@@ -71,6 +81,7 @@ def task_failure_handler(sender, exception, **kwargs):
     Celery 작업이 실패했을 때 호출됨.
     """
     if sender.name == 'tour.tasks.get_recommended_tour_based_area':
+        logger.info(f'task failure: {sender.request.id}, error Message: {exception}')
         task_id = sender.request.id
 
         # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
@@ -97,6 +108,7 @@ def remove_old_events():
 
 @shared_task
 def store_near_events():
+    logger.info('storing near events....')
     # API 연결
     SEOUL_DATA_BASE_URL = 'http://openapi.seoul.go.kr:8088'
     response_type = 'json'

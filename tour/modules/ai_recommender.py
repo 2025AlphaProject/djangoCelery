@@ -5,6 +5,9 @@ import ast
 from usr.models import User
 from .ai_models.ai_service import get_ai_response
 from .ai_models import claude_ai, deepseek_ai, gemini_ai
+from config.settings import APP_LOGGER
+import logging
+logger = logging.getLogger(APP_LOGGER)
 
 
 
@@ -43,7 +46,6 @@ class AiTourRecommender:
     \n이 리스트에는 각각 관광, 레포츠, 문화, 쇼핑 시설 정보가 들어있는 리스트가 있어. 각 시설 리스트에서 한국에서 유명한 시설들만 적절히 골라서 여행 코스를 구성해줘.
     장소들을 골랐다면, 각 장소들이 위도, 경도를 기준으로 이동하기 가장 적합하도록 장소 순서를 다시 재배치해줘.
     각 여행코스 리스트 안의 index 순서가 여행 순서야.
-    여행 코스는 최소 4가지 경우 이상으로 구성했으면 좋겠고, 한 여행 코스에는 최소 5가지 장소가 들어갔으면 좋겠고, 같은 장소가 반복되면 안돼.
     """
     def __init__(self, model='claude-3-7-sonnet-20250219', ai_service_key=None, tour_service_key=None):
         self.__model = model # ai_model 등록
@@ -129,40 +131,53 @@ class AiTourRecommender:
             user = User.objects.get(sub=user_id)
         except User.DoesNotExist:
             return ""
-        if user is not None:
-            return f"""
-            사용자의 나이대와 성별 정보는 다음과 같아. 다음 정보를 보고 나이대와 성별에 맞게 장소 추천을 해줘.
-            참고로 나이대는 예를들어서 1세이상 9세 이하면 1~9로 표기돼.\n
-            나이대: {user.age_range}, 성별: {user.gender}
-            """
+        if user.gender is None or user.gender == '' or user.age_range is None or user.age_range == '':
+            logger.info(f'user {user_id} does not have age_range or gender information')
+            return ""
+        # 유저 정보가 모두 갖춰져 있는 상태라면
+        return f"""
+                    사용자의 나이대와 성별 정보는 다음과 같아. 다음 정보를 보고 나이대와 성별에 맞게 장소 추천을 해줘.
+                    참고로 나이대는 예를들어서 1세이상 9세 이하면 1~9로 표기돼.\n
+                    나이대: {user.age_range}, 성별: {user.gender}
+                """
+
+    def __get_days_comment(self):
+        return f"여행 코스는 반드시 {self.days}가지 경우로 구성했으면 좋겠고, 한 여행 코스에는 최소 5가지 장소가 들어갔으면 좋겠고, 같은 장소가 반복되면 안돼.\n"
 
 
 
 
-    def get_recommended_tour_list_based_area(self, user_id, areaCode=AreaCode.SEOUL, arrange=Arrange.TITLE_IMAGE, sigunguCode=None):
+    def get_recommended_tour_list_based_area(self, user_id, days, areaCode=AreaCode.SEOUL, arrange=Arrange.TITLE_IMAGE, sigunguCode=None):
         """
 
         :return: 파이썬 리스트를 반환합니다.
         """
         places = []
+        self.days = days
         places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.GWANGWANGJI, arrange, sigunguCode)) # 관광지 정보 추가
         places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.LEIPORTS, arrange, sigunguCode)) # 레포츠 정보 추가
         places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.MUNHWASISUL, arrange, sigunguCode)) # 문화 시설
         places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.SHOPPING, arrange, sigunguCode)) # 쇼핑 정보
         # places.append(self.__get_area_based_tour_list(areaCode, ContentTypeId.SUKBAK, arrange, sigunguCode))  # 숙박 정보
-        self.__additional_comment = self.__get_personal_comment(user_id)
+        self.__additional_comment = self.__get_days_comment()
+        self.__additional_comment += self.__get_personal_comment(user_id)
         comment = self.__get_ai_comment(places)
-        # 문자열을 리스트로 변환
-        list = []
-        tour_list = ast.literal_eval(comment)
-        for i in range(len(tour_list)):
-            one_course = []
-            for j in range(len(tour_list[i])):
-                each = tour_list[i][j]
-                one_course.append(self.__place_list[int(each['id'])]) # 장소 추가
-            list.append(one_course) # 코스 추가
+        try:
+            # 문자열을 리스트로 변환
+            list = []
+            tour_list = ast.literal_eval(comment)
+            for i in range(len(tour_list)):
+                one_course = []
+                for j in range(len(tour_list[i])):
+                    each = tour_list[i][j]
+                    one_course.append(self.__place_list[int(each['id'])]) # 장소 추가
+                list.append(one_course) # 코스 추가
 
-        return list
+            return list
+        except Exception as e:
+            logger.error(e)
+            raise Exception(e)
+
 
     def get_recommended_tour_list_based_location(self, user_id, mapX, mapY, radius, **kwargs):
         places = self.__get_location_based_tour_list(mapX, mapY, radius, **kwargs)
