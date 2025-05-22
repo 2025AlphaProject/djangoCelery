@@ -1,8 +1,6 @@
 from types import FrameType
 from typing import Literal
 
-from unicodedata import category
-
 from services.public_data_portal_http_client import PublicDataPortalHttpClient
 from enum import Enum
 from config.settings import PUBLIC_DATA_PORTAL_API_KEY
