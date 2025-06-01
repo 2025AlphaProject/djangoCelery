@@ -2,6 +2,10 @@ from .tour_api_http_client import *
 from dataclasses import dataclass
 from .exception_handler import *
 from config.settings import PUBLIC_DATA_PORTAL_API_KEY
+from config.settings import APP_LOGGER
+import logging
+
+logger = logging.getLogger(APP_LOGGER)
 
 @dataclass
 class Place:
@@ -67,14 +71,8 @@ class TourAPIService:
         items = []
         try:
             items = raw_data['response']['body']['items']['item']
-        except KeyError:
-            raise HttpRequestException(
-                get_error_file(),
-                get_my_function(),
-                get_error_line(),
-                'tour api server exception',
-                f'raw data: {raw_data}'
-            )
+        except KeyError as e:
+            logger.error(str(e) + ', Error occurred in get_area_based_list()')
         # 올바르게 데이터가 넘어왔다고 가정.
 
         places = []
