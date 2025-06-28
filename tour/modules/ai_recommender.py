@@ -112,7 +112,7 @@ class AiTourRecommender:
         """
         self.AI_MODEL.ai_service_key = self.__ai_service_key
         system_prompt = """
-           너는 여행 전문가야. 내가 주는 다양한 카테고리의 장소 리스트 중에서
+           너는 여행사 투어 가이드야. 내가 주는 다양한 카테고리의 장소 리스트 중에서
            카테고리별로 가장 추천할만한 장소들을 최대 5개씩만 골라줘.
            아래와 같은 JSON 형식으로 출력해줘. 장소 설명이나 부가 설명 없이 반드시 JSON으로만 응답해.
 
@@ -131,6 +131,44 @@ class AiTourRecommender:
            """
         user_prompt = f"{str(place_list)}\n위 장소들을 카테고리별로 정리해서 최대 5개씩만 골라줘."
         return get_ai_response(self.AI_MODEL, system_prompt, user_prompt)
+
+    def get_recommended_place_by_category(self, user_id, areaCode, category_name, sigunguCode=None,
+                                          arrange=Arrange.TITLE_IMAGE):
+        """
+        AI가 추천한 전체 장소들 중 사용자가 요청한 카테고리(예: '음식점')에 해당하는 장소만 최대 5개까지 반환합니다.
+        """
+        try:
+            # 사용자 맞춤 텍스트 설정
+            self.__additional_comment = self.__get_personal_comment(user_id)
+
+            # 모든 contentTypeId에 대해 장소 수집 → self.__place_list 채워짐
+            place_list = self.__get_all_category_place_list(areaCode, sigunguCode, arrange)
+
+            # AI 호출 → 카테고리별 추천 장소 응답(JSON 문자열)
+            ai_response_text = self.__get_ai_category_comment(place_list)
+
+            # JSON 문자열 파싱
+            import json
+            ai_response = json.loads(ai_response_text)
+
+            # 요청한 카테고리가 없으면 빈 리스트 반환
+            if category_name not in ai_response:
+                logger.warning(f"'{category_name}' 카테고리가 AI 응답에 없음")
+                return []
+
+            # 최대 5개까지 추출 후 Place 객체로 변환
+            category_result = ai_response[category_name][:5]
+            result = []
+            for item in category_result:
+                idx = int(item['id'])
+                if 0 <= idx < len(self.__place_list):
+                    result.append(self.__place_list[idx])
+
+            return result
+
+        except Exception as e:
+            logger.error(e)
+            raise Exception(e)
 
     def __get_area_based_tour_list(self, areaCode, contentTypeId, arrange, sigunguCode=None):
         tour = TourApi(MobileOS=MobileOS.ANDROID, MobileApp='AiTourRecommender', service_key=self.__tour_service_key)
