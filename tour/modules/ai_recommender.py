@@ -62,6 +62,43 @@ class AiTourRecommender:
         self.__tour_service_key = tour_service_key
         return self.__tour_service_key
 
+    def __get_all_category_place_list(self, areaCode, sigunguCode=None, arrange=Arrange.TITLE_IMAGE):
+        """
+        ContentTypeId 전체를 순회하며 해당 지역(place) 리스트를 self.__place_list에 저장하고,
+        AI에게 넘길 수 있는 가공된 딕셔너리 리스트로 반환합니다.
+        """
+        self.__place_list = []  # 기존 데이터 초기화
+        tour = TourApi(MobileOS=MobileOS.ANDROID, MobileApp='AiTourRecommender', service_key=self.__tour_service_key)
+        st_index = 0
+        raw_data_list = []
+
+        for content_type in ContentTypeId:
+            data = {
+                'areaCode': areaCode.value if isinstance(areaCode, Enum) else areaCode,
+                'contentTypeId': content_type.value,
+                'arrange': arrange.value if isinstance(arrange, Enum) else arrange,
+            }
+
+            if sigunguCode:
+                for sigungu in sigunguCode:
+                    data['sigunguCode'] = sigungu
+                    places = tour.get_area_based_list(**data)
+                    self.__place_list.extend(places)
+            else:
+                places = tour.get_area_based_list(**data)
+                self.__place_list.extend(places)
+
+        for i, place in enumerate(self.__place_list):
+            raw_data_list.append({
+                'id': i,
+                'name': place.get_title(),
+                'mapX': place.get_mapX(),
+                'mapY': place.get_mapY(),
+                'contentTypeId': place.get_contentTypeId()
+            })
+
+        return raw_data_list
+
     def __get_area_based_tour_list(self, areaCode, contentTypeId, arrange, sigunguCode=None):
         tour = TourApi(MobileOS=MobileOS.ANDROID, MobileApp='AiTourRecommender', service_key=self.__tour_service_key)
         data = {
