@@ -99,6 +99,39 @@ class AiTourRecommender:
 
         return raw_data_list
 
+    def __get_ai_category_comment(self, place_list):
+        """
+        AI에게 모든 장소 리스트를 넘기고, 카테고리별로 추천 장소를 정제해달라고 요청하는 함수입니다.
+        AI는 각 contentTypeId에 대해 적절한 장소를 분류하여 JSON 형식으로 반환해야 합니다.
+        예시:
+        {
+            "음식점": [ {"id": "0", "name": "A", "mapX": "126.1", "mapY": "37.5"}, ... ],
+            "쇼핑": [...],
+            ...
+        }
+        """
+        self.AI_MODEL.ai_service_key = self.__ai_service_key
+        system_prompt = """
+           너는 여행 전문가야. 내가 주는 다양한 카테고리의 장소 리스트 중에서
+           카테고리별로 가장 추천할만한 장소들을 최대 5개씩만 골라줘.
+           아래와 같은 JSON 형식으로 출력해줘. 장소 설명이나 부가 설명 없이 반드시 JSON으로만 응답해.
+
+           {
+               "음식점": [
+                   {"id": "0", "name": "맛집A", "mapX": "126.98", "mapY": "37.56"},
+                   {"id": "4", "name": "맛집B", "mapX": "126.93", "mapY": "37.57"}
+               ],
+               "쇼핑": [...],
+               ...
+           }
+
+           contentTypeId는 다음과 같이 대응돼:
+           12: 관광지, 14: 문화시설, 15: 축제공연행사, 25: 여행코스,
+           28: 레포츠, 32: 숙박, 38: 쇼핑, 39: 음식점
+           """
+        user_prompt = f"{str(place_list)}\n위 장소들을 카테고리별로 정리해서 최대 5개씩만 골라줘."
+        return get_ai_response(self.AI_MODEL, system_prompt, user_prompt)
+
     def __get_area_based_tour_list(self, areaCode, contentTypeId, arrange, sigunguCode=None):
         tour = TourApi(MobileOS=MobileOS.ANDROID, MobileApp='AiTourRecommender', service_key=self.__tour_service_key)
         data = {
