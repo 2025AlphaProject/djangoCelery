@@ -52,6 +52,41 @@ def get_recommended_tour_based_area(group_name, area_code, days, arrange=Arrange
             course[j] = data
     return recommended_list
 
+
+@shared_task
+def get_recommended_place_by_category_task(user_id, areaCode, categoryName, sigunguCode=None,
+                                           arrange=Arrange.TITLE_IMAGE):
+    """
+    사용자 요청 기반, 특정 카테고리에 대해 AI가 추천한 장소 최대 5개 반환
+    """
+    logger.info(f'카테고리 추천 요청: user_id={user_id}, areaCode={areaCode}, categoryName={categoryName}')
+    recommender = AiTourRecommender(ai_service_key=AI_SERVICE_KEY,
+                                    tour_service_key=PUBLIC_DATA_PORTAL_API_KEY)
+
+    result_places = recommender.get_recommended_place_by_category(
+        user_id=user_id,
+        areaCode=areaCode,
+        category_name=categoryName,
+        sigunguCode=sigunguCode,
+        arrange=arrange
+    )
+
+    # 실제 필요한 정보만 추려서 리스트로 반환
+    result = []
+    for place in result_places:
+        result.append({
+            'address': place.get_address(),
+            'areaCode': place.get_area_code(),
+            'contentId': place.get_contentId(),
+            'mapX': place.get_mapX(),
+            'mapY': place.get_mapY(),
+            'title': place.get_title(),
+            'image1': place.get_image1_url(),
+        })
+
+    return result
+
+
 @task_success.connect
 def task_success_handler(sender, result, **kwargs):
     """
