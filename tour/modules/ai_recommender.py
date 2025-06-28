@@ -1,11 +1,11 @@
 import anthropic
-
+import json
 from .tour_api import *
+import ast
 from usr.models import User
 from .ai_models.ai_service import get_ai_response
 from .ai_models import claude_ai, deepseek_ai, gemini_ai
 from config.settings import APP_LOGGER
-import json
 import logging
 logger = logging.getLogger(APP_LOGGER)
 
@@ -14,11 +14,11 @@ class AiTourRecommender:
     AI_MODEL = gemini_ai.GeminiModel()
 
     def __init__(self, model='claude-3-7-sonnet-20250219', ai_service_key=None, tour_service_key=None):
-        self.__model = model  # ai_model 등록
-        self.__ai_service_key = self.set_ai_service_key(ai_service_key)  # ai_api service key 등록
-        self.__tour_service_key = self.set_tour_service_key(tour_service_key)  # tour_service key 등록
-        self.__place_list = []  # 장소 리스트 입니다.
-        self.__additional_comment = ''  # 추가 프롬프팅 텍스트입니다.
+        self.__model = model # ai_model 등록
+        self.__ai_service_key = self.set_ai_service_key(ai_service_key) # ai_api service key 등록
+        self.__tour_service_key = self.set_tour_service_key(tour_service_key) # tour_service key 등록
+        self.__place_list = [] # 장소 리스트 입니다.
+        self.__additional_comment = '' # 추가 프롬프팅 텍스트입니다.
 
     def set_ai_service_key(self, service_key):
         self.__ai_service_key = service_key
@@ -35,6 +35,7 @@ class AiTourRecommender:
         """
         self.__place_list = []  # 기존 데이터 초기화
         tour = TourApi(MobileOS=MobileOS.ANDROID, MobileApp='AiTourRecommender', service_key=self.__tour_service_key)
+        st_index = 0
         raw_data_list = []
 
         for content_type in ContentTypeId:
@@ -68,6 +69,12 @@ class AiTourRecommender:
         """
         AI에게 모든 장소 리스트를 넘기고, 카테고리별로 추천 장소를 정제해달라고 요청하는 함수입니다.
         AI는 각 contentTypeId에 대해 적절한 장소를 분류하여 JSON 형식으로 반환해야 합니다.
+        예시:
+        {
+            "음식점": [ {"id": "0", "name": "A", "mapX": "126.1", "mapY": "37.5"}, ... ],
+            "쇼핑": [...],
+            ...
+        }
         """
         self.AI_MODEL.ai_service_key = self.__ai_service_key
         system_prompt = """
@@ -107,6 +114,7 @@ class AiTourRecommender:
             ai_response_text = self.__get_ai_category_comment(place_list)
 
             # JSON 문자열 파싱
+
             ai_response = json.loads(ai_response_text)
 
             # 요청한 카테고리가 없으면 빈 리스트 반환
@@ -132,6 +140,7 @@ class AiTourRecommender:
         """
         Ai 프롬프팅에 넣을 사용자 맞춤 정보를 설정합니다.
         """
+        user = None
         try:
             user = User.objects.get(sub=user_id)
         except User.DoesNotExist:
@@ -139,8 +148,9 @@ class AiTourRecommender:
         if user.gender is None or user.gender == '' or user.age_range is None or user.age_range == '':
             logger.info(f'user {user_id} does not have age_range or gender information')
             return ""
+        # 유저 정보가 모두 갖춰져 있는 상태라면
         return f"""
-            사용자의 나이대와 성별 정보는 다음과 같아. 다음 정보를 보고 나이대와 성별에 맞게 장소 추천을 해줘.
-            참고로 나이대는 예를 들어서 1세 이상 9세 이하면 1~9로 표기돼.\n
-            나이대: {user.age_range}, 성별: {user.gender}
-        """
+                    사용자의 나이대와 성별 정보는 다음과 같아. 다음 정보를 보고 나이대와 성별에 맞게 장소 추천을 해줘.
+                    참고로 나이대는 예를들어서 1세이상 9세 이하면 1~9로 표기돼.\n
+                    나이대: {user.age_range}, 성별: {user.gender}
+                """
