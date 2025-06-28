@@ -16,44 +16,6 @@ logger = logging.getLogger(APP_LOGGER)
 channel_group_name = None # channel 그룹 이름입니다.
 
 @shared_task
-def get_recommended_tour_based_area(group_name, area_code, days, arrange=Arrange.TITLE_IMAGE, sigungu_code=None):
-    logger.info(f'received tour recommend request, channel_id: {group_name}')
-    recommender = AiTourRecommender(ai_service_key=AI_SERVICE_KEY,
-                                    tour_service_key=PUBLIC_DATA_PORTAL_API_KEY) # ai 투어 추천자 생성
-    global channel_group_name
-    channel_group_name = group_name
-    data = {
-        'areaCode': area_code,
-        'arrange': arrange,
-        'days': days,
-    }
-    if sigungu_code is not None:
-        data['sigunguCode'] = sigungu_code
-    user_id = None
-    if len(group_name.split('_')) > 1:
-        user_id = int(group_name.split('_')[0])
-    else:
-        user_id = int(group_name)
-    data['user_id'] = int(user_id)
-    recommended_list = recommender.get_recommended_tour_list_based_area(**data)
-    for i in range(len(recommended_list)):
-        course = recommended_list[i]
-        for j in range(len(course)):
-            place = course[j]
-            data = {
-                'address': place.get_address(),
-                'areaCode': place.get_area_code(),
-                'contentId': place.get_contentId(),
-                'mapX': place.get_mapX(),
-                'mapY': place.get_mapY(),
-                'title': place.get_title(),
-                'image1': place.get_image1_url(),
-            }
-            course[j] = data
-    return recommended_list
-
-
-@shared_task
 def get_recommended_place_by_category_task(user_id, areaCode, categoryName, sigunguCode=None,
                                            arrange=Arrange.TITLE_IMAGE):
     """
@@ -92,7 +54,7 @@ def task_success_handler(sender, result, **kwargs):
     """
         Celery 작업이 성공적으로 완료되었을 때 호출됨.
     """
-    if sender.name == 'tour.tasks.get_recommended_tour_based_area':
+    if sender.name == 'tour.tasks.get_recommended_place_by_category_task':
         logger.info(f'task success: {sender.request.id}')
         task_id = sender.request.id # 작업 아이디를 가져옵니다.
 
@@ -115,7 +77,7 @@ def task_failure_handler(sender, exception, **kwargs):
     """
     Celery 작업이 실패했을 때 호출됨.
     """
-    if sender.name == 'tour.tasks.get_recommended_tour_based_area':
+    if sender.name == 'tour.tasks.get_recommended_place_by_category_task':
         logger.info(f'task failure: {sender.request.id}, error Message: {exception}')
         task_id = sender.request.id
 
