@@ -16,7 +16,7 @@ logger = logging.getLogger(APP_LOGGER)
 channel_group_name = None # channel 그룹 이름입니다.
 
 @shared_task
-def get_recommended_place_by_category_task(user_id, areaCode, categoryName, sigunguCode=None,
+def get_recommended_place_by_category_task(user_id, areaCode, categoryNames, sigunguCode=None,
                                            arrange=Arrange.TITLE_IMAGE):
     """
     사용자 요청 기반, 특정 카테고리에 대해 AI가 추천한 장소 최대 5개 반환
@@ -25,18 +25,18 @@ def get_recommended_place_by_category_task(user_id, areaCode, categoryName, sigu
     recommender = AiTourRecommender(ai_service_key=AI_SERVICE_KEY,
                                     tour_service_key=PUBLIC_DATA_PORTAL_API_KEY)
 
-    result_places = recommender.get_recommended_place_by_category(
+    result_places = recommender.get_recommended_places_by_categories(
         user_id=user_id,
         areaCode=areaCode,
-        category_name=categoryName,
+        category_names=categoryNames,
         sigunguCode=sigunguCode,
         arrange=arrange
     )
 
     # 실제 필요한 정보만 추려서 리스트로 반환
-    result = []
-    for place in result_places:
-        result.append({
+    result = {}
+    for category, places in result_places.items():
+        result[category] = [{
             'address': place.get_address(),
             'areaCode': place.get_area_code(),
             'contentId': place.get_contentId(),
@@ -44,7 +44,7 @@ def get_recommended_place_by_category_task(user_id, areaCode, categoryName, sigu
             'mapY': place.get_mapY(),
             'title': place.get_title(),
             'image1': place.get_image1_url(),
-        })
+        } for place in places]
 
     return result
 
