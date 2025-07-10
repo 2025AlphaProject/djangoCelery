@@ -98,37 +98,33 @@ class AiTourRecommender:
         user_prompt = f"{str(place_list)}\n위 장소들을 카테고리별로 정리해서 최대 5개씩만 골라줘."
         return get_ai_response(self.AI_MODEL, system_prompt, user_prompt)
 
-    def get_recommended_place_by_category(self, user_id, areaCode, category_name, sigunguCode=None,
-                                          arrange=Arrange.TITLE_IMAGE):
+    def get_recommended_places_by_categories(self, user_id, areaCode, category_names: list, sigunguCode=None,
+                                             arrange=Arrange.TITLE_IMAGE):
         """
-        AI가 추천한 전체 장소들 중 사용자가 요청한 카테고리(예: '음식점')에 해당하는 장소만 최대 5개까지 반환합니다.
+        복수 카테고리를 입력받아 각 카테고리별 최대 5개의 추천 장소 반환.
+        category_names: 예) ['음식점', '관광지']
+        결과: { '음식점': [Place, ...], '관광지': [Place, ...] }
         """
         try:
-            # 사용자 맞춤 텍스트 설정
             self.__additional_comment = self.__get_personal_comment(user_id)
 
-            # 모든 contentTypeId에 대해 장소 수집 → self.__place_list 채워짐
+            # 모든 장소 수집
             place_list = self.__get_all_category_place_list(areaCode, sigunguCode, arrange)
 
-            # AI 호출 → 카테고리별 추천 장소 응답(JSON 문자열)
+            # AI 호출
             ai_response_text = self.__get_ai_category_comment(place_list)
-
-            # JSON 문자열 파싱
-
             ai_response = json.loads(ai_response_text)
 
-            # 요청한 카테고리가 없으면 빈 리스트 반환
-            if category_name not in ai_response:
-                logger.warning(f"'{category_name}' 카테고리가 AI 응답에 없음")
-                return []
-
-            # 최대 5개까지 추출 후 Place 객체로 변환
-            category_result = ai_response[category_name][:5]
-            result = []
-            for item in category_result:
-                idx = int(item['id'])
-                if 0 <= idx < len(self.__place_list):
-                    result.append(self.__place_list[idx])
+            # 카테고리별 결과 추출
+            result = {}
+            for category in category_names:
+                category_result = ai_response.get(category, [])[:5]
+                place_objs = []
+                for item in category_result:
+                    idx = int(item['id'])
+                    if 0 <= idx < len(self.__place_list):
+                        place_objs.append(self.__place_list[idx])
+                result[category] = place_objs
 
             return result
 
