@@ -1,0 +1,51 @@
+INFO 2025-07-13 00:54:34,429 tasks 25364 29480 task failure: eda26033-18e1-46cc-9973-f2131a32f8b6, error Message: name 'categoryName' is not defined
+INFO 2025-07-13 00:59:34,219 tasks 10180 3556 task failure: 9445c4c4-f1d7-400a-91b9-b5276eb01b96, error Message: name 'categoryName' is not defined
+INFO 2025-07-13 01:02:17,854 tasks 27816 13488 카테고리 추천 요청: user_id=test123_xyz, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-13 01:02:17,855 ai_recommender 27816 13488 Field 'sub' expected a number but got 'test123_xyz'.
+INFO 2025-07-13 01:02:17,869 tasks 27816 13488 task failure: 0b560351-5f94-4579-89dc-6b86fae35361, error Message: Field 'sub' expected a number but got 'test123_xyz'.
+INFO 2025-07-13 01:02:51,859 tasks 27816 13488 카테고리 추천 요청: user_id=test123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-13 01:02:51,859 ai_recommender 27816 13488 Field 'sub' expected a number but got 'test123_123'.
+INFO 2025-07-13 01:02:51,869 tasks 27816 13488 task failure: ff0ecfcd-f070-42fb-8df1-b94566d0137f, error Message: Field 'sub' expected a number but got 'test123_123'.
+INFO 2025-07-13 01:03:14,657 tasks 27816 13488 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-13 01:03:32,668 tasks 27816 13488 task success: a9f1733b-ac87-4cdc-8a87-38986f0ccd0b
+INFO 2025-07-13 01:14:46,099 tasks 20760 3684 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-13 01:15:02,242 tasks 20760 3684 task success: 605ed96a-b642-485a-8aea-849304925cb2
+INFO 2025-07-13 01:19:38,553 tasks 30556 26908 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-13 01:19:54,012 tasks 30556 26908 task success: 32df41f7-187e-429f-a74b-557ff27e701e
+INFO 2025-07-13 01:25:24,251 tasks 7792 20820 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-13 01:25:40,216 tasks 7792 20820 task success: 55e6efdd-a5b6-4cf2-ae96-3a4c89d4cf34
+INFO 2025-07-13 01:29:11,183 tasks 7792 20820 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-13 01:29:26,501 tasks 7792 20820 task success: fb93df42-8d28-497e-b55f-7cbae05fa93f
+INFO 2025-07-13 01:30:10,131 tasks 7792 20820 카테고리 추천 요청: user_id=test123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-13 01:30:10,132 ai_recommender 7792 20820 Field 'sub' expected a number but got 'test123_123'.
+INFO 2025-07-13 01:30:10,143 tasks 7792 20820 task failure: 4b5715dc-12e1-48be-a62c-493aceec5197, error Message: Field 'sub' expected a number but got 'test123_123'.
+INFO 2025-07-13 01:30:22,253 tasks 7792 20820 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-13 01:30:37,499 tasks 7792 20820 task success: 5b30d609-345e-46fe-a5f4-659f3445d888
+INFO 2025-07-13 01:30:48,226 tasks 7792 20820 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-13 01:31:03,795 tasks 7792 20820 task success: 2ff017b0-ed79-4724-8e8d-cc43b3b6c91d
+INFO 2025-07-13 01:32:04,416 tasks 32256 24704 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-13 01:32:16,561 tasks 32256 24704 task success: c37ca11c-c185-4696-9ae7-3f6e99447310
+INFO 2025-07-14 16:57:20,836 tasks 27116 28136 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-14 16:57:20,837 ai_recommender 27116 28136 no such table: usr_user
+INFO 2025-07-14 16:57:20,851 tasks 27116 28136 task failure: 85f694a0-584f-4d8f-a102-d224e5c47d09, error Message: no such table: usr_user
+INFO 2025-07-14 16:57:22,889 tasks 27116 28136 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-14 16:57:22,890 ai_recommender 27116 28136 no such table: usr_user
+INFO 2025-07-14 16:57:22,896 tasks 27116 28136 task failure: 01be3c63-a2ff-410e-bdbf-e351f554184a, error Message: no such table: usr_user
+INFO 2025-07-14 16:57:24,919 tasks 27116 28136 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-14 16:57:24,920 ai_recommender 27116 28136 no such table: usr_user
+INFO 2025-07-14 16:57:24,929 tasks 27116 28136 task failure: 83d141d6-341b-48da-b21e-cc0663cda498, error Message: no such table: usr_user
+INFO 2025-07-14 16:58:44,047 tasks 28328 5712 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-14 16:58:44,048 ai_recommender 28328 5712 no such table: usr_user
+INFO 2025-07-14 16:58:44,059 tasks 28328 5712 task failure: a949e813-0bc7-4ffb-be84-2b9319df96f6, error Message: no such table: usr_user
+INFO 2025-07-14 17:29:08,784 tasks 30236 30672 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-14 17:29:08,785 ai_recommender 30236 30672 no such table: usr_user
+INFO 2025-07-14 17:29:08,806 tasks 30236 30672 task failure: d48e98db-ac89-4c9d-bad7-0d459fc8f03d, error Message: no such table: usr_user
+INFO 2025-07-14 17:33:51,729 tasks 27756 13144 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-14 17:33:51,730 ai_recommender 27756 13144 no such table: usr_user
+INFO 2025-07-14 17:33:51,740 tasks 27756 13144 task failure: 7a3118b7-813e-44d7-8718-c6b31cb242fa, error Message: no such table: usr_user
+INFO 2025-07-14 17:37:37,471 tasks 10612 27008 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-14 17:37:37,472 ai_recommender 10612 27008 no such table: usr_user
+INFO 2025-07-14 17:37:37,484 tasks 10612 27008 task failure: 4dc585d7-cc07-41e4-a5a0-7b7fcb170a66, error Message: no such table: usr_user
+INFO 2025-07-14 17:38:38,113 tasks 23160 29824 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-14 17:38:38,114 ai_recommender 23160 29824 no such table: usr_user
+INFO 2025-07-14 17:38:38,126 tasks 23160 29824 task failure: 0a0a7df4-fb52-410c-9601-b2960b48b0d8, error Message: no such table: usr_user
