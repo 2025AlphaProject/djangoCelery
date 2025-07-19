@@ -35,24 +35,37 @@ class AiTourRecommender:
         """
         self.__place_list = []  # 기존 데이터 초기화
         tour = TourApi(MobileOS=MobileOS.ANDROID, MobileApp='AiTourRecommender', service_key=self.__tour_service_key)
-        st_index = 0
         raw_data_list = []
 
         for content_type in ContentTypeId:
-            data = {
-                'areaCode': areaCode.value if isinstance(areaCode, Enum) else areaCode,
-                'contentTypeId': content_type.value,
-                'arrange': arrange.value if isinstance(arrange, Enum) else arrange,
-            }
+            page_no = 1
+            while True:
+                data = {
+                    'areaCode': areaCode.value if isinstance(areaCode, Enum) else areaCode,
+                    'contentTypeId': content_type.value,
+                    'arrange': arrange.value if isinstance(arrange, Enum) else arrange,
+                    'pageNo': page_no,
+                    'numOfRows': 100  # 한 페이지에 100개씩
+                }
 
-            if sigunguCode:
-                for sigungu in sigunguCode:
-                    data['sigunguCode'] = sigungu
+                if sigunguCode:
+                    # sigunguCode가 있는 경우, 각 sigunguCode에 대해 반복해야 하지만,
+                    # 현재 로직에서는 복잡해지므로 일단 sigunguCode가 없을 때의 페이징에 집중합니다.
+                    # 이 부분은 추후 개선이 필요할 수 있습니다.
                     places = tour.get_area_based_list(**data)
+                    if not places: # 더 이상 가져올 데이터가 없으면 중단
+                        break
                     self.__place_list.extend(places)
-            else:
-                places = tour.get_area_based_list(**data)
-                self.__place_list.extend(places)
+                else:
+                    places = tour.get_area_based_list(**data)
+                    if not places: # 더 이상 가져올 데이터가 없으면 중단
+                        break
+                    self.__place_list.extend(places)
+                
+                page_no += 1
+                # API 과부하를 막기 위해 간단한 sleep 추가 (선택 사항)
+                # import time
+                # time.sleep(0.1)
 
         for i, place in enumerate(self.__place_list):
             raw_data_list.append({
@@ -65,7 +78,7 @@ class AiTourRecommender:
 
         return raw_data_list
 
-    def __get_ai_category_comment(self, place_list):
+    def __get_ai_category_comment(self, place_list, category_names):
         """
         AI에게 모든 장소 리스트를 넘기고, 카테고리별로 추천 장소를 정제해달라고 요청하는 함수입니다.
         AI는 각 contentTypeId에 대해 적절한 장소를 분류하여 JSON 형식으로 반환해야 합니다.
@@ -79,15 +92,16 @@ class AiTourRecommender:
         self.AI_MODEL.ai_service_key = self.__ai_service_key
         system_prompt = """
            너는 여행사 투어 가이드야. 내가 주는 다양한 카테고리의 장소 리스트 중에서
-           카테고리별로 가장 추천할만한 장소들을 최대 5개씩만 골라줘.
-           아래와 같은 JSON 형식으로 출력해줘. 장소 설명이나 부가 설명 없이 반드시 JSON으로만 응답해.
+           요청한 카테고리별로 가장 추천할만한 장소들을 최대 5개씩만 골라줘.
+           아래와 같은 JSON 형식으로 출력해줘. 장소 설명이나 부가 설명 없이 반드시 JSON으로만 응답해야 해.
+           JSON의 key는 반드시 contentTypeId 숫자로 해야 해.
 
            {
-               "음식점": [
+               "39": [
                    {"id": "0", "name": "맛집A", "mapX": "126.98", "mapY": "37.56"},
                    {"id": "4", "name": "맛집B", "mapX": "126.93", "mapY": "37.57"}
                ],
-               "쇼핑": [...],
+               "38": [...],
                ...
            }
 
@@ -95,7 +109,7 @@ class AiTourRecommender:
            12: 관광지, 14: 문화시설, 15: 축제공연행사,
            28: 레포츠, 32: 숙박, 38: 쇼핑, 39: 음식점
            """
-        user_prompt = f"{str(place_list)}\n위 장소들을 카테고리별로 정리해서 최대 5개씩만 골라줘."
+        user_prompt = f"{str(place_list)}\n위 장소들을 다음 카테고리별로 정리해서 최대 5개씩만 골라줘: {category_names}"
         return get_ai_response(self.AI_MODEL, system_prompt, user_prompt)
 
     def get_recommended_places_by_categories(self, user_id, areaCode, category_names: list, sigunguCode=None,
@@ -112,7 +126,7 @@ class AiTourRecommender:
             place_list = self.__get_all_category_place_list(areaCode, sigunguCode, arrange)
 
             # AI 호출
-            ai_response_text = self.__get_ai_category_comment(place_list)
+            ai_response_text = self.__get_ai_category_comment(place_list, category_names)
             ai_response = json.loads(ai_response_text)
 
             # 카테고리별 결과 추출
