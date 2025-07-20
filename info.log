@@ -128,3 +128,20 @@ INFO 2025-07-20 21:15:06,409 tasks 29416 27260 task failure: ded1c5b1-2717-4577-
 INFO 2025-07-20 21:18:43,903 tasks 23136 27040 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
 ERROR 2025-07-20 21:18:44,292 ai_recommender 23136 27040 isinstance() arg 2 must be a type, a tuple of types, or a union
 INFO 2025-07-20 21:18:44,312 tasks 23136 27040 task failure: ddf73cbd-81cb-4d4f-b2bd-aed25521168f, error Message: isinstance() arg 2 must be a type, a tuple of types, or a union
+INFO 2025-07-20 21:36:36,882 tasks 21656 12664 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-20 21:37:24,993 tasks 21656 12664 task success: 1a9816ce-5a31-40a2-b3d6-81ea1236875f
+INFO 2025-07-20 21:38:53,636 tasks 21656 12664 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-20 21:39:41,398 tasks 21656 12664 task success: 36b9ffcd-da5b-4bb5-bfe0-b2afb7ebf109
+INFO 2025-07-20 21:40:44,267 tasks 21656 12664 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-20 21:41:50,699 tasks 21656 12664 task success: 26ba31b2-a75b-4950-bfad-254580861a5d
+INFO 2025-07-21 00:38:18,069 tasks 21404 26596 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+INFO 2025-07-21 00:39:32,199 tasks 21404 26596 task success: 5d4e98ea-4811-4299-92dc-2d471a155057
+INFO 2025-07-21 00:40:15,416 tasks 21404 26596 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '14', '15', '25', '28', '32', '38', '39']
+INFO 2025-07-21 00:41:09,506 tasks 21404 26596 task success: 81db0c2f-8527-4a31-9b73-b60223429be1
+INFO 2025-07-21 00:42:44,942 tasks 30444 23928 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '14', '15', '25', '28', '32', '38', '39']
+ERROR 2025-07-21 00:43:19,033 ai_recommender 30444 23928 Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}}
+INFO 2025-07-21 00:43:19,041 tasks 30444 23928 task failure: 54793f37-2460-444b-a346-e9ba00c70242, error Message: Exception(AuthenticationError("Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}}"))
+INFO 2025-07-21 00:43:59,968 tasks 30444 23928 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '14', '15', '25', '28', '32', '38', '39']
+ERROR 2025-07-21 00:44:32,486 ai_recommender 30444 23928 Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}}
+INFO 2025-07-21 00:44:32,491 tasks 30444 23928 task failure: 0b867a7d-cefb-4475-94ba-b5bf0e906901, error Message: Exception(AuthenticationError("Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}}"))
+INFO 2025-07-21 00:51:59,550 tasks 27668 8556 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '14', '15', '25', '28', '32', '38', '39']
