@@ -49,25 +49,27 @@ class AiTourRecommender:
                 }
 
                 if sigunguCode:
-                    # sigunguCode가 있는 경우, 각 sigunguCode에 대해 반복해야 하지만,
-                    # 현재 로직에서는 복잡해지므로 일단 sigunguCode가 없을 때의 페이징에 집중합니다.
-                    # 이 부분은 추후 개선이 필요할 수 있습니다.
                     places = tour.get_area_based_list(**data)
-                    if not places: # 더 이상 가져올 데이터가 없으면 중단
+                    if places is None:
+                        places = []
+                    if not isinstance(places, list):
+                        places = [places]
+                    if not places:
                         break
                     self.__place_list.extend(places)
                 else:
                     places = tour.get_area_based_list(**data)
-                    if not places: # 더 이상 가져올 데이터가 없으면 중단
-                        break
+                    if places is None:
+                        places = []
+                    if not isinstance(places, list):
+                        places = [places]
                     self.__place_list.extend(places)
                 
                 page_no += 1
-                # API 과부하를 막기 위해 간단한 sleep 추가 (선택 사항)
-                # import time
-                # time.sleep(0.1)
+
 
         for i, place in enumerate(self.__place_list):
+            str_id = str(i)
             raw_data_list.append({
                 'id': i,
                 'name': place.get_title(),

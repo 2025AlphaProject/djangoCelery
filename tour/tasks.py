@@ -18,6 +18,9 @@ channel_group_name = None # channel 그룹 이름입니다.
 @shared_task
 def get_recommended_place_by_category_task(user_id, areaCode, categoryNames, sigunguCode=None,
                                            arrange=Arrange.TITLE_IMAGE, group_name=None):  # <- group_name 추가
+    global channel_group_name # 전역 변수 사용 선언
+    if group_name:
+        channel_group_name = group_name
 
     """
     사용자 요청 기반, 특정 카테고리에 대해 AI가 추천한 장소 최대 5개 반환
