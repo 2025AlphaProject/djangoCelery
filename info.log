@@ -116,3 +116,15 @@ INFO 2025-07-20 11:56:19,196 tasks 11352 22004 task failure: 4c7c9e6c-a8e3-460e-
 INFO 2025-07-20 12:01:23,371 tasks 26676 27432 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
 ERROR 2025-07-20 12:01:26,697 ai_recommender 26676 27432 string indices must be integers, not 'str'
 INFO 2025-07-20 12:01:26,702 tasks 26676 27432 task failure: 086c8225-b1c1-4b4e-a8e8-9e334a4a0869, error Message: string indices must be integers, not 'str'
+INFO 2025-07-20 12:03:56,622 tasks 25876 7316 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-20 12:04:00,255 ai_recommender 25876 7316 string indices must be integers, not 'str'
+INFO 2025-07-20 12:04:00,261 tasks 25876 7316 task failure: f56da238-875e-4ee1-af71-c1a1828c2e90, error Message: string indices must be integers, not 'str'
+INFO 2025-07-20 12:07:07,481 tasks 26188 26628 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-20 12:07:13,265 ai_recommender 26188 26628 string indices must be integers, not 'str'
+INFO 2025-07-20 12:07:13,271 tasks 26188 26628 task failure: 536631e0-45b8-4ffc-82f6-d2aabfbde67c, error Message: string indices must be integers, not 'str'
+INFO 2025-07-20 21:15:01,354 tasks 29416 27260 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-20 21:15:06,390 ai_recommender 29416 27260 string indices must be integers, not 'str'
+INFO 2025-07-20 21:15:06,409 tasks 29416 27260 task failure: ded1c5b1-2717-4577-9b97-ac735b12914a, error Message: string indices must be integers, not 'str'
+INFO 2025-07-20 21:18:43,903 tasks 23136 27040 카테고리 추천 요청: user_id=123_123, areaCode=1, categoryName=['12', '38']
+ERROR 2025-07-20 21:18:44,292 ai_recommender 23136 27040 isinstance() arg 2 must be a type, a tuple of types, or a union
+INFO 2025-07-20 21:18:44,312 tasks 23136 27040 task failure: ddf73cbd-81cb-4d4f-b2bd-aed25521168f, error Message: isinstance() arg 2 must be a type, a tuple of types, or a union

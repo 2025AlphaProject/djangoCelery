@@ -22,10 +22,10 @@ class Area:
 
     @staticmethod
     def from_raw_list_to_area_list(raw_list):
-        list = []
+        area_list = []
         for item in raw_list:
-            list.append(Area(item))
-        return list
+            area_list.append(Area(item))
+        return area_list
 
     def get_address(self):
         return self.__address
@@ -325,22 +325,22 @@ class TourApi:
     """
         uri = '/areaBasedList1'
         # not required parameters
-        list = ['numOfRows',
-                'pageNo',
-                'listYN',
-                'arrange',
-                'contentTypeId',
-                'areaCode',
-                'sigunguCode',
-                'cat1',
-                'cat2',
-                'cat3',
-                'modifiedtime',
-                ]
+        allowed_params = ['numOfRows',
+                          'pageNo',
+                          'listYN',
+                          'arrange',
+                          'contentTypeId',
+                          'areaCode',
+                          'sigunguCode',
+                          'cat1',
+                          'cat2',
+                          'cat3',
+                          'modifiedtime',
+                          ]
         # 보낼 정보 저장
         parameters = self.__upload_required_params()
         # None이 아닌 모든 값을 딕셔너리 형태로 저장
-        for each in list:
+        for each in allowed_params:
             if each in kwargs:
                 if isinstance(kwargs[each], Enum): # 들어오는 형식이 enum 형식이라면
                     parameters[each] = kwargs[each].value
@@ -349,10 +349,22 @@ class TourApi:
         response = requests.get(BASE_URL + uri, params=parameters)
         if response.status_code == 200:
             try:
-                if response.json()['response']['body']['totalCount'] == 0: # 컨텐츠가 없으면 빈 리스트 반환
+                body = response.json()['response']['body']
+                if body['totalCount'] == 0:
                     return []
-                return Area.from_raw_list_to_area_list(response.json()['response']['body']['items']['item'])
-            except JSONDecodeError: # api 한도 초과시
+
+                items = body.get('items')
+
+                if isinstance(items, dict):
+                    item = items.get('item', [])
+                    # 결과가 하나일 경우 dict, 여러개일 경우 list로 반환되므로 list로 통일
+                    if not isinstance(item, list):
+                        item = [item]
+                    return Area.from_raw_list_to_area_list(item)
+                else:
+                    # items가 딕셔너리가 아니면 빈 리스트 반환
+                    return []
+            except JSONDecodeError:
                 raise Exception("API 한도 초과 혹은 관광 api 서버 오류")
         return None
 
