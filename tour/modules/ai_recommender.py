@@ -49,22 +49,19 @@ class AiTourRecommender:
                 }
 
                 if sigunguCode:
+                    data['sigunguCode'] = sigunguCode
+                try:
                     places = tour.get_area_based_list(**data)
-                    if places is None:
-                        places = []
-                    if not isinstance(places, list):
-                        places = [places]
-                    if not places:
-                        break
-                    self.__place_list.extend(places)
-                else:
-                    places = tour.get_area_based_list(**data)
-                    if places is None:
-                        places = []
-                    if not isinstance(places, list):
-                        places = [places]
-                    self.__place_list.extend(places)
-                
+                except TypeError:
+                    places = []
+
+                if places is None:
+                    places = []
+                if not isinstance(places, list):
+                    places = [places]
+                if not places:
+                    break
+                self.__place_list.extend(places)
                 page_no += 1
 
 
