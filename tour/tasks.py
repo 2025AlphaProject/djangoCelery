@@ -16,87 +16,88 @@ logger = logging.getLogger(APP_LOGGER)
 channel_group_name = None # channel 그룹 이름입니다.
 
 @shared_task
-def get_recommended_tour_based_area(group_name, area_code, days, arrange=Arrange.TITLE_IMAGE, sigungu_code=None):
-    logger.info(f'received tour recommend request, channel_id: {group_name}')
+def get_recommended_place_by_category_task(user_id, areaCode, categoryNames, sigunguCode=None,
+                                           arrange=Arrange.TITLE_IMAGE, group_name=None):  # <- group_name 추가
+    global channel_group_name # 전역 변수 사용 선언
+    if group_name:
+        channel_group_name = group_name
+
+    """
+    사용자 요청 기반, 특정 카테고리에 대해 AI가 추천한 장소 최대 5개 반환
+    """
+    logger.info(f'카테고리 추천 요청: user_id={user_id}, areaCode={areaCode}, categoryName={categoryNames}')
     recommender = AiTourRecommender(ai_service_key=AI_SERVICE_KEY,
-                                    tour_service_key=PUBLIC_DATA_PORTAL_API_KEY) # ai 투어 추천자 생성
-    global channel_group_name
-    channel_group_name = group_name
-    data = {
-        'areaCode': area_code,
-        'arrange': arrange,
-        'days': days,
-    }
-    if sigungu_code is not None:
-        data['sigunguCode'] = sigungu_code
-    user_id = None
-    if len(group_name.split('_')) > 1:
-        user_id = int(group_name.split('_')[0])
-    else:
-        user_id = int(group_name)
-    data['user_id'] = int(user_id)
-    recommended_list = recommender.get_recommended_tour_list_based_area(**data)
-    for i in range(len(recommended_list)):
-        course = recommended_list[i]
-        for j in range(len(course)):
-            place = course[j]
-            data = {
-                'address': place.get_address(),
-                'areaCode': place.get_area_code(),
-                'contentId': place.get_contentId(),
-                'mapX': place.get_mapX(),
-                'mapY': place.get_mapY(),
-                'title': place.get_title(),
-                'image1': place.get_image1_url(),
-            }
-            course[j] = data
-    return recommended_list
+                                    tour_service_key=PUBLIC_DATA_PORTAL_API_KEY)
+
+    result_places = recommender.get_recommended_places_by_categories(
+        user_id=user_id,
+        areaCode=areaCode,
+        category_names=categoryNames,
+        sigunguCode=sigunguCode,
+        arrange=arrange
+    )
+
+    # 실제 필요한 정보만 추려서 리스트로 반환
+    result = {}
+    for category, places in result_places.items():
+        result[category] = [{
+            'address': place.get_address(),
+            'areaCode': place.get_area_code(),
+            'contentId': place.get_contentId(),
+            'mapX': place.get_mapX(),
+            'mapY': place.get_mapY(),
+            'title': place.get_title(),
+            'image1': place.get_image1_url(),
+        } for place in places]
+
+    return result
+
 
 @task_success.connect
 def task_success_handler(sender, result, **kwargs):
     """
         Celery 작업이 성공적으로 완료되었을 때 호출됨.
     """
-    if sender.name == 'tour.tasks.get_recommended_tour_based_area':
-        logger.info(f'task success: {sender.request.id}')
-        task_id = sender.request.id # 작업 아이디를 가져옵니다.
 
-        # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f"{channel_group_name}",
-            {
-                "type": "task_update",
-                "message": {
-                    "task_id": task_id,
-                    "status": "SUCCESS",
-                    "result": result,
-                },
+    logger.info(f'task success: {sender.request.id}')
+    task_id = sender.request.id # 작업 아이디를 가져옵니다.
+
+    # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"{channel_group_name}",
+        {
+            "type": "task_update",
+            "message": {
+                "task_id": task_id,
+                "status": "SUCCESS",
+                "result": result,
             },
-        )
+        },
+    )
 
 @task_failure.connect
 def task_failure_handler(sender, exception, **kwargs):
     """
     Celery 작업이 실패했을 때 호출됨.
     """
-    if sender.name == 'tour.tasks.get_recommended_tour_based_area':
-        logger.info(f'task failure: {sender.request.id}, error Message: {exception}')
-        task_id = sender.request.id
 
-        # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f"{channel_group_name}",
-            {
-                "type": "task_update",
-                "message": {
-                    "task_id": task_id,
-                    "status": "FAILURE",
-                    "result": str(exception),
-                },
+    logger.info(f'task failure: {sender.request.id}, error Message: {exception}')
+    task_id = sender.request.id
+
+    # A 컨테이너의 Django Channels를 통해 클라이언트에게 WebSocket 메시지 전송
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"{channel_group_name}",
+        {
+            "type": "task_update",
+            "message": {
+                "task_id": task_id,
+                "status": "FAILURE",
+                "result": str(exception),
             },
-        )
+        },
+    )
 
 @shared_task
 def remove_old_events():

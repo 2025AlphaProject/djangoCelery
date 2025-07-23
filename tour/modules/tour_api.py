@@ -427,6 +427,3 @@ class TourApi:
             if response.json()['response']['body']['totalCount'] == 0: return []
             raw = response.json()['response']['body']['items']['item']
             return Area.from_raw_list_to_area_list(raw)
-
-
-
