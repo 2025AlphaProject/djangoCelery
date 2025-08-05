@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'tour',
     'usr',
+    'push_notification'
     'django_celery_results',
     'celery',
     'django_celery_beat'
