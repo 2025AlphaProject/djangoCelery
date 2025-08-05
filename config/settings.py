@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'tour',
     'usr',
-    'push_notification'
+    'push_notification',
     'django_celery_results',
     'celery',
     'django_celery_beat'
@@ -250,7 +250,7 @@ service_account_key = {
     "type": env('TYPE'),
     "project_id": env('PROJECT_ID'),
     "private_key_id": env('PRIVATE_KEY_ID'),
-    "private_key": env('PRIVATE_KEY'),
+    "private_key": env('PRIVATE_KEY').replace("\\n", "\n"),
     "client_email": env('CLIENT_EMAIL'),
     "client_id": env('CLIENT_ID'),
     "auth_uri": env('AUTH_URI'),
