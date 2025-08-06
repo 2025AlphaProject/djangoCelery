@@ -107,19 +107,18 @@ def remove_old_events():
     today = datetime.date.today()
     Event.objects.filter(end_date__lt=today).delete() # 이벤트 마지막 날짜보다 작을 경우 데이터 삭제 진행
 
+
 @shared_task
 def store_near_events():
     logger.info('storing near events....')
-    # API 연결
+
     DATA_BASE_URL = 'http://apis.data.go.kr/B551011/KorService2'
     service_name = 'searchFestival2'
-    url = DATA_BASE_URL + f'/{service_name}'
+    url = f'{DATA_BASE_URL}/{service_name}'
     response_type = 'json'
-    how_many = 50 # 정보 갯수
-    flag = False # 각 정보가 오늘 날짜보다 과거일 경우 True로 변환하여 for문을 빠져나갑니다.
-    today = datetime.date.today() # 오늘 날짜를 가져옵니다.
+    how_many = 50
+    today = datetime.date.today()
 
-    # list_total_count 정보를 위해 정보 하나만 가져옵니다.
     params = {
         'serviceKey': PUBLIC_DATA_PORTAL_API_KEY,
         'MobileOS': 'AND',
@@ -129,41 +128,37 @@ def store_near_events():
         'pageNo': 1,
         'numOfRows': 1,
     }
-    response = requests.get(url, params=params)
-    list_total_count = response.json()['response']['body']['totalCount'] # 총 리스트 갯수를 나타냅니다.
 
-    # api로부터 정보 50개씩 가져옵니다.
+    response = requests.get(url, params=params)
+    list_total_count = response.json()['response']['body']['totalCount']
+
     for page in range(1, (list_total_count // how_many) + 2):
         params['pageNo'] = page
         params['numOfRows'] = how_many
         response = requests.get(url, params=params)
 
-        # 정보 저장
         data_list = response.json()['response']['body']['items']['item']
-        if isinstance(data_list, dict):  # 단일 객체일 경우 리스트로 변환
+        if isinstance(data_list, dict):
             data_list = [data_list]
 
         for each in data_list:
-            if datetime.datetime.strptime(each['eventenddate'], '%Y%m%d').date() < today: # 이벤트가 과거 정보라면
-                # 데이터가 뒤로갈수록 오래된 이벤트 정보이므로 바로 break문 걸어서 종료 시켜도 무방
-                flag = True
-                break
+            start = datetime.datetime.strptime(each['eventstartdate'], '%Y%m%d').date()
+            end = datetime.datetime.strptime(each['eventenddate'], '%Y%m%d').date()
 
-            # 이벤트를 만듭니다. 같은 제목의 이름이 같으면 pass
+            # 오늘 기준으로 진행 중인 축제만 저장
+            if not (start <= today <= end):
+                continue
+
             Event.objects.get_or_create(
                 title=each['title'],
                 defaults={
                     'category': each.get('cat1', ''),
                     'title': each['title'],
                     'img_url': each.get('firstimage', '') or each.get('firstimage2', ''),
-                    'start_date': datetime.datetime.strptime(each['eventstartdate'], '%Y%m%d').strftime('%Y-%m-%d'),
-                    'end_date': datetime.datetime.strptime(each['eventenddate'], '%Y%m%d').strftime('%Y-%m-%d'),
-                    'mapX': float(each.get('mapx')) ,
+                    'start_date': start.strftime('%Y-%m-%d'),
+                    'end_date': end.strftime('%Y-%m-%d'),
+                    'mapX': float(each.get('mapx')),
                     'mapY': float(each.get('mapy')),
                     'homepage_url': each.get('homepage', '')
                 }
             )
-
-        if flag: break
-
-    # DB에 데이터 저장
