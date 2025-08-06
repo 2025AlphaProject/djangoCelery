@@ -1,4 +1,5 @@
 from django.db import models
+from usr.models import User
 
 # Create your models here.
 class Event(models.Model):
@@ -15,3 +16,16 @@ class Event(models.Model):
 
     class Meta:
         managed = False # api 컨테이너에서만 테이블을 관리합니다.
+
+
+class Travel(models.Model):
+    # id: pk
+    user = models.ManyToManyField(User) # 유저 제거시 해당 여행도 제거
+    tour_name = models.CharField(max_length=255)  # 여행 이름 필드 추가
+    tour_date = models.DateField() # 여행 날짜
+
+    def __str__(self):
+        return self.tour_name
+
+    class Meta:
+        managed = False

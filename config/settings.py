@@ -192,6 +192,13 @@ CELERY_BEAT_SCHEDULE = {
         'options': {
             'expires': 300 # 300초 내에 실행되지 않으면 만료됩니다.
         }
+    },
+    'push_notifications_about_end_tour':{
+        'task': 'push_notification.tasks.send_push_notifications_about_end_tour',
+        'schedule': crontab(hour='22', minute='0'), # 오후 10시에 알림을 보냅니다.
+        'options': {
+            'expires': 300 # 300초 내에 실행되지 않으면 만료됩니다.
+        }
     }
 }
 # 아래는 로그 설정입니다.
