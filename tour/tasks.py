@@ -7,7 +7,7 @@ from celery.signals import task_success, task_failure
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import requests
-from config.settings import SEOUL_PUBLIC_DATA_SERVICE_KEY, APP_LOGGER
+from config.settings import APP_LOGGER
 from .models import Event
 import datetime
 import logging
@@ -107,51 +107,54 @@ def remove_old_events():
     today = datetime.date.today()
     Event.objects.filter(end_date__lt=today).delete() # 이벤트 마지막 날짜보다 작을 경우 데이터 삭제 진행
 
+
 @shared_task
 def store_near_events():
     logger.info('storing near events....')
-    # API 연결
-    SEOUL_DATA_BASE_URL = 'http://openapi.seoul.go.kr:8088'
-    response_type = 'json'
-    service_name = 'culturalEventInfo'
-    start_index = 1
-    url = SEOUL_DATA_BASE_URL + f'/{SEOUL_PUBLIC_DATA_SERVICE_KEY}/{response_type}/{service_name}'
-    # list_total_count 정보를 위해 정보 하나만 가져옵니다.
-    response = requests.get(url + '/1/1/')
-    list_total_count = response.json()['culturalEventInfo']['list_total_count'] # 총 리스트 갯수를 나타냅니다.
-    # api로부터 정보 50개씩 가져옵니다.
-    how_many = 50 # 정보 갯수
-    flag = False # 각 정보가 오늘 날짜보다 과거일 경우 True로 변환하여 for문을 빠져나갑니다.
-    today = datetime.date.today() # 오늘 날짜를 가져옵니다.
-    for i in range(start_index, list_total_count, how_many):
-        response = requests.get(url + f'/{i}/{i + how_many - 1}/')
-        # 정보 저장
-        data_list = response.json()['culturalEventInfo']['row']
-        for each in data_list:
-            if datetime.datetime.strptime(each['END_DATE'].split()[0], '%Y-%m-%d').date() < today: # 이벤트가 과거 정보라면
-                # 데이터가 뒤로갈수록 오래된 이벤트 정보이므로 바로 break문 걸어서 종료 시켜도 무방
-                flag = True
-                break
-            # 이벤트를 만듭니다. 같은 제목의 이름이 같으면 pass
-            Event.objects.get_or_create(
-                title=each['TITLE'],
-                defaults={
-                    'category': each['CODENAME'],
-                    'gu_name': each['GUNAME'],
-                    'title': each['TITLE'],
-                    'img_url': each['MAIN_IMG'],
-                    'start_date': each['STRTDATE'].split()[0],
-                    'end_date': each['END_DATE'].split()[0],
-                    'mapX': float(each['LAT']),
-                    'mapY': float(each['LOT']),
-                    'homepage_url': each['HMPG_ADDR']
 
+    DATA_BASE_URL = 'http://apis.data.go.kr/B551011/KorService2'
+    service_name = 'searchFestival2'
+    url = f'{DATA_BASE_URL}/{service_name}'
+    response_type = 'json'
+    how_many = 50
+    today = datetime.date.today()
+
+    params = {
+        'serviceKey': PUBLIC_DATA_PORTAL_API_KEY,
+        'MobileOS': 'AND',
+        'MobileApp': 'Alpha',
+        '_type': response_type,
+        'eventStartDate': today.strftime('%Y%m%d'),
+        'pageNo': 1,
+        'numOfRows': 1,
+    }
+
+    response = requests.get(url, params=params)
+    list_total_count = response.json()['response']['body']['totalCount']
+
+    for page in range(1, (list_total_count // how_many) + 2):
+        params['pageNo'] = page
+        params['numOfRows'] = how_many
+        response = requests.get(url, params=params)
+
+        data_list = response.json()['response']['body']['items']['item']
+        if isinstance(data_list, dict):
+            data_list = [data_list]
+
+        for each in data_list:
+            start = datetime.datetime.strptime(each['eventstartdate'], '%Y%m%d').date()
+            end = datetime.datetime.strptime(each['eventenddate'], '%Y%m%d').date()
+
+            Event.objects.get_or_create(
+                title=each['title'],
+                defaults={
+                    'category': each.get('cat1', ''),
+                    'title': each['title'],
+                    'img_url': each.get('firstimage', '') or each.get('firstimage2', ''),
+                    'start_date': start.strftime('%Y-%m-%d'),
+                    'end_date': end.strftime('%Y-%m-%d'),
+                    'mapX': float(each.get('mapx')),
+                    'mapY': float(each.get('mapy')),
+                    'homepage_url': each.get('homepage', '')
                 }
             )
-
-        if flag: break
-
-
-
-
-    # DB에 데이터 저장
