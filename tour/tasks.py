@@ -145,10 +145,6 @@ def store_near_events():
             start = datetime.datetime.strptime(each['eventstartdate'], '%Y%m%d').date()
             end = datetime.datetime.strptime(each['eventenddate'], '%Y%m%d').date()
 
-            # 오늘 기준으로 진행 중인 축제만 저장
-            if not (start <= today <= end):
-                continue
-
             Event.objects.get_or_create(
                 title=each['title'],
                 defaults={
