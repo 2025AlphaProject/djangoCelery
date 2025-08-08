@@ -173,7 +173,7 @@ class Arrange(Enum):
 
 
 # 한국 관광정보 api를 위한 베이스 URL
-BASE_URL = 'http://apis.data.go.kr/B551011/KorService1'
+BASE_URL = 'http://apis.data.go.kr/B551011/KorService2'
 
 class TourApi:
     """
