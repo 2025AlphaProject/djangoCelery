@@ -211,8 +211,8 @@ class TourApi:
     def __upload_required_params(self):
         parameters = dict()
         parameters['serviceKey'] = self.__serviceKey
-        parameters['mobileOS'] = self.MobileOS
-        parameters['mobileApp'] = self.MobileApp
+        parameters['MobileOS'] = self.MobileOS
+        parameters['MobileApp'] = self.MobileApp
         parameters['_type'] = 'json'
         parameters['numOfRows'] = 100 # 디폴트로 30개로 제한
         return parameters
@@ -223,7 +223,7 @@ class TourApi:
         :param areaCode: 지역 번호를 의미합니다. AreaCode enum 사용가능
         :return: 지역 코드 리스트를 반환합니다.
         """
-        uri = '/areaCode1'
+        uri = '/areaCode2'
         parameters = self.__upload_required_params()
         parameters['numOfRows'] = 100 # 한번에 100개의 정보를 보여줍니다.
         parameters['areaCode'] = areaCode.value if isinstance(areaCode, Enum) else areaCode
@@ -281,7 +281,7 @@ class TourApi:
 
     :return: API 호출이 성공하면 Area 객체 형식의 결과를 반환하며, 실패 시 None을 반환합니다.
     """
-        uri = '/locationBasedList1'
+        uri = '/locationBasedList2'
         parameters = self.__upload_required_params()
         parameters['mapX'] = mapX
         parameters['mapY'] = mapY
@@ -323,11 +323,10 @@ class TourApi:
 
     :return: API 호출이 성공하면 Area 객체 형식의 결과를 반환하며, 실패 시 None을 반환합니다.
     """
-        uri = '/areaBasedList1'
+        uri = '/areaBasedList2'
         # not required parameters
         list = ['numOfRows',
                 'pageNo',
-                'listYN',
                 'arrange',
                 'contentTypeId',
                 'areaCode',
@@ -362,10 +361,10 @@ class TourApi:
         :param contentId: 컨텐츠 아이디 (각 api로 얻은 관광지(지역) 고유 컨텐츠 아이디)
         :return:
         """
-        uri = '/detailImage1'
+        uri = '/detailImage2'
         parameters = self.__upload_required_params()
         parameters['contentId'] = contentId
-        parameters['subImageYN'] = 'Y' # 원본,썸네일이미지조회,공공누리 저작권유형정보조회
+        parameters['imageYN'] = 'Y' # 원본,썸네일이미지조회,공공누리 저작권유형정보조회
         response = requests.get(BASE_URL + uri, params=parameters)
         if response.status_code == 200:
             returnList = []
@@ -395,7 +394,7 @@ class TourApi:
         :param kwargs:
         :return: JSON 형식으로, 분류코드에 해당하는 'code'와 그에 대응되는 이름 정보인 'name' 키 값이 포함
         """
-        uri = '/categoryCode1'
+        uri = '/categoryCode2'
         parameters = self.__upload_required_params()
         for each in kwargs.keys():
             parameters[each] = kwargs[each].value if isinstance(kwargs[each], Enum) else kwargs[each]
@@ -415,7 +414,7 @@ class TourApi:
         :param event_start_date: 이벤트 시작 날짜 (여행 시작 날짜, YYYYMMDD 형식)
         :param event_end_date: 이벤트 마감 날짜(여행 마감 날짜, YYYYMMDD 형식)
         """
-        uri = '/searchFestival1'
+        uri = '/searchFestival2'
         parameters = self.__upload_required_params()
         parameters['eventStartDate'] = event_start_date
         parameters['eventEndDate'] = event_end_date
