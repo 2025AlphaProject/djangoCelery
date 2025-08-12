@@ -13,3 +13,11 @@ class User(AbstractUser):
 
     class Meta:
         managed = False
+
+class FCMToken(models.Model):
+    # id: pk
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    fcm_token = models.CharField(max_length=500, null=True, blank=True) # 알림을 위한 클라이언트 측 fcm 토큰을 저장합니다.
+
+    class Meta:
+        managed = False

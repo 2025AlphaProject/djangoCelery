@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import environ
 import os
 from pathlib import Path
+import firebase_admin
+from firebase_admin import credentials
 
 from celery.schedules import crontab
 
@@ -52,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'tour',
     'usr',
+    'push_notification',
     'django_celery_results',
     'celery',
     'django_celery_beat'
@@ -189,6 +192,13 @@ CELERY_BEAT_SCHEDULE = {
         'options': {
             'expires': 300 # 300초 내에 실행되지 않으면 만료됩니다.
         }
+    },
+    'push_notifications_about_end_tour':{
+        'task': 'push_notification.tasks.send_push_notifications_about_end_tour',
+        'schedule': crontab(hour='22', minute='0'), # 오후 10시에 알림을 보냅니다.
+        'options': {
+            'expires': 300 # 300초 내에 실행되지 않으면 만료됩니다.
+        }
     }
 }
 # 아래는 로그 설정입니다.
@@ -240,3 +250,22 @@ LOGGING = {
 
 # 앱 기본 로거 설정
 APP_LOGGER='django'
+
+# 아래는 FCM을 위한 파이어베이스 세팅입니다.
+# 도커에 json 파일 복사하는 불편함을 해소하고자 json 파일을 읽어내는 것이 아닌 .env 파일로 로드하는 것으로 합니다.
+service_account_key = {
+    "type": env('TYPE'),
+    "project_id": env('PROJECT_ID'),
+    "private_key_id": env('PRIVATE_KEY_ID'),
+    "private_key": env('PRIVATE_KEY').replace("\\n", "\n"),
+    "client_email": env('CLIENT_EMAIL'),
+    "client_id": env('CLIENT_ID'),
+    "auth_uri": env('AUTH_URI'),
+    "token_uri": env('TOKEN_URI'),
+    "auth_provider_x509_cert_url": env('AUTH_PROVIDER_X509_CERT_URL'),
+    "client_x509_cert_url": env('CLIENT_X509_CERT_URL'),
+    "universe_domain": env('UNIVERSE_DOMAIN'),
+}
+
+cred = credentials.Certificate(service_account_key)
+firebase_admin.initialize_app(cred)
