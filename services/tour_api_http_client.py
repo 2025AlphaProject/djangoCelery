@@ -203,6 +203,8 @@ class TourAPIHTTPClient:
         return self.http_client.get_tour_api_response(path, **params)
 
     def get_area_based_list(self,
+                            numOfRows: int,
+                            pageNo: int,
                             arrange: Arrange = None,
                             contentTypeId: ContentType = None,
                             area_info: Area = None,

@@ -29,3 +29,46 @@ class Travel(models.Model):
 
     class Meta:
         managed = False
+
+class Place(models.Model):
+    # id: pk
+    name = models.CharField(max_length=100) # 장소 이름, 글자 수 제한
+    mapX = models.FloatField() # 소수점 표현
+    mapY = models.FloatField() # 소수점 표현
+    road_address = models.TextField(blank=True, null=True) # 도로명 주소, 프론트로부터
+    address = models.TextField(blank=True, null=True) # 지번 주소, 프론트 혹은 백의 비동기 작업으로부터
+    cat1 = models.TextField(blank=True, null=True) # 소분류
+    cat2 = models.TextField(blank=True, null=True) # 중분류
+    cat3 = models.TextField(blank=True, null=True) # 대분류
+    place_image = models.URLField(blank=True, null=True)
+    areacode = models.CharField(max_length=255, blank=True, db_index=True)
+    sigungucode = models.CharField(max_length=255, blank=True, db_index=True)
+    contentid = models.CharField(max_length=255, blank=True, unique=True, db_index=True)
+    contenttypeid = models.CharField(max_length=255, blank=True)
+    zipcode = models.CharField(max_length=255, blank=True)
+    lDongRegnCd = models.CharField(max_length=255, blank=True)
+    lDongSignguCd = models.CharField(max_length=255, blank=True)
+    lclsSystm1 = models.CharField(max_length=255, blank=True)
+    lclsSystm2 = models.CharField(max_length=255, blank=True)
+    lclsSystm3 = models.CharField(max_length=255, blank=True)
+    tel = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        managed = False
+
+
+class TravelDaysAndPlaces(models.Model):
+    # id: pk
+    travel = models.ForeignKey(Travel, on_delete=models.CASCADE) # 여행 제거시 해당 일차도 제거
+    place = models.ForeignKey(Place, on_delete=models.CASCADE) # 장소 제거시 해당 일차도 제거
+
+    class Meta:
+        managed = False
+
+class PlaceImages(models.Model):
+    # id: pk
+    place = models.ForeignKey(Place, on_delete=models.CASCADE)
+    image_url = models.URLField() # 이미지 url 정보를 저장합니다.
+
+    class Meta:
+        managed = False
