@@ -8,6 +8,7 @@ from .ai_models import claude_ai, deepseek_ai, gemini_ai
 from config.settings import APP_LOGGER
 import logging
 logger = logging.getLogger(APP_LOGGER)
+from tour.models import Place
 
 
 class AiTourRecommender:
@@ -77,6 +78,23 @@ class AiTourRecommender:
 
         return raw_data_list
 
+    def __get_all_category_place_list_from_db(self, areaCode, sigunguCode=None):
+        if isinstance(sigunguCode, list):
+            sigunguCode = sigunguCode[0]
+        places = Place.objects.filter(areacode=str(areaCode), sigungucode=str(sigunguCode))
+        logger.info(f'areaCode {areaCode} sigunguCode {sigunguCode}')
+        ans = []
+        for each in places:
+            logger.info(f'place: {each.name}')
+            ans.append({
+                'id': each.id,
+                'name': each.name,
+                'mapX': each.mapX,
+                'mapY': each.mapY,
+                'contentTypeId': each.contenttypeid
+            })
+        return ans
+
     def __get_ai_category_comment(self, place_list, category_names):
         """
         AI에게 모든 장소 리스트를 넘기고, 카테고리별로 추천 장소를 정제해달라고 요청하는 함수입니다.
@@ -91,7 +109,8 @@ class AiTourRecommender:
         self.AI_MODEL.ai_service_key = self.__ai_service_key
         system_prompt = """
            너는 여행사 투어 가이드야. 내가 주는 다양한 카테고리의 장소 리스트 중에서
-           요청한 카테고리별로 가장 추천할만한 장소들을 최대 5개씩만 골라줘.
+           요청한 카테고리별로 우리나라에서 가장 추천할만한 장소들을 5개씩만 골라줘.
+           너무 리스트의 앞쪽에서만 추천 장소 뽑아내지 말고 리스트 안에서 적절한 장소들을 뽑아서 추천해줘. 
            아래와 같은 JSON 형식으로 출력해줘. 장소 설명이나 부가 설명 없이 반드시 JSON으로만 응답해야 해.
            JSON의 key는 반드시 contentTypeId 숫자로 해야 해.
 
@@ -122,11 +141,14 @@ class AiTourRecommender:
             self.__additional_comment = self.__get_personal_comment(user_id)
 
             # 모든 장소 수집
-            place_list = self.__get_all_category_place_list(areaCode, sigunguCode, arrange)
+            # place_list = self.__get_all_category_place_list(areaCode, sigunguCode, arrange)
+            place_list = self.__get_all_category_place_list_from_db(areaCode, sigunguCode)
+
 
             # AI 호출
             ai_response_text = self.__get_ai_category_comment(place_list, category_names)
             ai_response = json.loads(ai_response_text)
+            # ai_response = []
 
             # 카테고리별 결과 추출
             result = {}
@@ -134,11 +156,13 @@ class AiTourRecommender:
                 category_result = ai_response.get(category, [])[:5]
                 place_objs = []
                 for item in category_result:
-                    idx = int(item['id'])
-                    if 0 <= idx < len(self.__place_list):
-                        place_objs.append(self.__place_list[idx])
+                    place_objs.append(Place.objects.get(id=int(item['id'])))
+                #     idx = int(item['id'])
+                #     # if 0 <= idx < len(self.__place_list):
+                #     place_objs.append(self.__place_list[idx])
                 result[category] = place_objs
 
+            logger.info(f'result: {result}')
             return result
 
         except Exception as e:

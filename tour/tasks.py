@@ -8,9 +8,10 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import requests
 from config.settings import APP_LOGGER
-from .models import Event
+from .models import Event, Place
 import datetime
 import logging
+from services.tour_api_service import TourAPIService
 logger = logging.getLogger(APP_LOGGER)
 
 channel_group_name = None # channel 그룹 이름입니다.
@@ -41,15 +42,16 @@ def get_recommended_place_by_category_task(user_id, areaCode, categoryNames, sig
     result = {}
     for category, places in result_places.items():
         result[category] = [{
-            'address': place.get_address(),
-            'areaCode': place.get_area_code(),
-            'contentId': place.get_contentId(),
-            'mapX': place.get_mapX(),
-            'mapY': place.get_mapY(),
-            'title': place.get_title(),
-            'image1': place.get_image1_url(),
+            'address': place.road_address,
+            'areaCode': place.areacode,
+            'contentId': place.contentid,
+            'mapX': place.mapX,
+            'mapY': place.mapY,
+            'title': place.name,
+            'image1': place.place_image,
         } for place in places]
 
+    logger.info(f'total_reuslt:{result}')
     return result
 
 
@@ -158,3 +160,49 @@ def store_near_events():
                     'homepage_url': each.get('homepage', '')
                 }
             )
+
+
+@shared_task
+def save_new_places():
+    # logger.info('removing old places....')
+    # Place.objects.all().delete()
+    logger.info('saving places....')
+    tour_api_service = TourAPIService(service_key=PUBLIC_DATA_PORTAL_API_KEY)
+    numOfRows = 150 # 한번에 100개의 장소만 가져옵니다.
+    pageNo = 1
+    while True:
+        logger.info(f'pageNo: {pageNo} 장소 저장 시도 중입니다....')
+        places = tour_api_service.get_area_based_list(
+            numOfRows=numOfRows,
+            pageNo=pageNo,
+        )
+
+        if pageNo > tour_api_service.total_count // numOfRows + 1:
+            break
+
+        for place in places:
+            obj, created = Place.objects.update_or_create(
+                contentid=place.contentid,
+                defaults={
+                    "mapX": place.mapx,
+                    "mapY": place.mapy,
+                    "name": place.title,
+                    "cat1": place.cat1,
+                    "cat2": place.cat2,
+                    "cat3": place.cat3,
+                    "place_image": place.firstimage,
+                    "areacode": place.areacode,
+                    "sigungucode": place.sigungucode,
+                    "contenttypeid": place.contenttypeid,
+                    "zipcode": place.zipcode,
+                    "lDongRegnCd": place.lDongRegnCd,
+                    "lDongSignguCd": place.lDongSignguCd,
+                    "lclsSystm1": place.lclsSystm1,
+                    "lclsSystm2": place.lclsSystm2,
+                    "lclsSystm3": place.lclsSystm3,
+                    "tel": place.tel,
+                    "road_address": place.addr1
+                }
+            )
+        pageNo += 1
+    logger.info(f'All places saved')

@@ -199,6 +199,10 @@ CELERY_BEAT_SCHEDULE = {
         'options': {
             'expires': 300 # 300초 내에 실행되지 않으면 만료됩니다.
         }
+    },
+    'store_all_places':{
+        'task': 'tour.tasks.save_new_places',
+        'schedule': crontab(hour='1', minute='0'),
     }
 }
 # 아래는 로그 설정입니다.

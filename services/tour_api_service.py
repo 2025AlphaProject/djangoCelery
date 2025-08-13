@@ -1,6 +1,6 @@
 from .tour_api_http_client import *
 from dataclasses import dataclass
-from .exception_handler import *
+# from .exception_handler import *
 from config.settings import PUBLIC_DATA_PORTAL_API_KEY
 from config.settings import APP_LOGGER
 import logging
@@ -42,11 +42,14 @@ class TourAPIService:
     """
     해당 클래스는 tour_api_http_client로 받은  raw 데이터 정보를 가공하여 데이터를 제공하는 역할을 합니다.
     """
+    total_count = 0
     def __init__(self, service_key):
         self.service_key = service_key
         self.tour_api_http_client = TourAPIHTTPClient(service_key)
 
     def get_area_based_list(self,
+                            numOfRows: int,
+                            pageNo: int,
                             arrange: Arrange = None,
                             contentTypeId: ContentType = None,
                             area_info: Area = None,
@@ -60,6 +63,8 @@ class TourAPIService:
         각 장소 정보가 담긴 Place 객체 리스트로 받아옵니다.
         """
         raw_data = self.tour_api_http_client.get_area_based_list(
+            numOfRows=numOfRows,
+            pageNo=pageNo,
             arrange=arrange,
             contentTypeId=contentTypeId,
             area_info=area_info,
@@ -68,6 +73,7 @@ class TourAPIService:
             ldong=ldong,
             lclsSystem=lclsSystem,
         )
+        self.total_count = raw_data['response']['body']['totalCount']
         items = []
         try:
             items = raw_data['response']['body']['items']['item']
