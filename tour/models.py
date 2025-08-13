@@ -44,7 +44,7 @@ class Place(models.Model):
     areacode = models.CharField(max_length=255, blank=True, db_index=True)
     sigungucode = models.CharField(max_length=255, blank=True, db_index=True)
     contentid = models.CharField(max_length=255, blank=True, unique=True, db_index=True)
-    contenttypeid = models.CharField(max_length=255, blank=True)
+    contenttypeid = models.CharField(max_length=255, blank=True, db_index=True)
     zipcode = models.CharField(max_length=255, blank=True)
     lDongRegnCd = models.CharField(max_length=255, blank=True)
     lDongSignguCd = models.CharField(max_length=255, blank=True)
