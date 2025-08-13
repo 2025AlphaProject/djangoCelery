@@ -51,7 +51,7 @@ class Place(models.Model):
     lclsSystm1 = models.CharField(max_length=255, blank=True)
     lclsSystm2 = models.CharField(max_length=255, blank=True)
     lclsSystm3 = models.CharField(max_length=255, blank=True)
-    tel = models.CharField(max_length=255, blank=True)
+    tel = models.TextField(blank=True)
 
     class Meta:
         managed = False
