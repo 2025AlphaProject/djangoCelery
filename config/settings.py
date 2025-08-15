@@ -207,6 +207,13 @@ CELERY_BEAT_SCHEDULE = {
             'expires': 300 # 300초 내에 실행되지 않으면 만료됩니다.
         }
     },
+    'push_noti_memory':{
+        'task': 'push_notification.tasks.send_push_noti_memory',
+        'schedule': crontab(hour='14', minute='0'), # 오후 2시에 알림을 보냅니다.'
+        'options': {
+            'expires': 300 # 300초 내에 실행되지 않으면 만료됩니다.
+        }
+    },
     'store_all_places':{
         'task': 'tour.tasks.save_new_places',
         'schedule': crontab(hour='1', minute='0'),

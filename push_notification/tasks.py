@@ -1,3 +1,5 @@
+from calendar import month
+
 from celery import shared_task
 from django.db.models import QuerySet
 from firebase_admin import messaging, auth
@@ -8,6 +10,7 @@ from tour.models import Travel
 from django.utils import timezone
 from datetime import timedelta
 from typing import List, Optional
+from dateutil.relativedelta import relativedelta
 
 APP_LOGGER = getattr(settings, 'APP_LOGGER')
 logger = logging.getLogger(APP_LOGGER)
@@ -43,7 +46,7 @@ def get_android_config() -> messaging.AndroidConfig:
     )
 
 
-def send_notification_to_tokens(fcm_tokens: List[FCMToken], title: str, body: str,
+def send_notification_to_tokens(fcm_tokens: QuerySet[FCMToken], title: str, body: str,
                                 deeplink: str, user_id: int) -> None:
     """FCM 토큰들에게 알림을 전송합니다."""
     android_config = get_android_config()
@@ -119,3 +122,20 @@ def send_push_noti_deadline():
     }
 
     send_tour_notifications(tours, notification_config)
+
+@shared_task
+def send_push_noti_memory():
+    """
+        추억 관련 알림을 보냅니다.
+        3개월, 6개월, 1년, 2년, 5년 단위로 추억을 보냅니다.
+        오후 2시에 알림을 보냅니다.
+    """
+    DURATION_MONTHS = [3, 6, 12, 24, 60]
+    for duration in DURATION_MONTHS:
+        tours = Travel.objects.filter(tour_date=timezone.localdate() - relativedelta(months=duration))
+        duration_title = f'{duration}개월 전' if duration < 12 else f'{duration // 12}년 전'
+        notification_config = {
+            'title': f'{duration_title}의 추억을 다시 만나보세요! 📸',
+            'body': duration_title + ', \'{tour_name}\' 여행을 기억하시나요? 그때의 사진과 인생네컷을 지금 감상해보세요!'
+        }
+        send_tour_notifications(tours, notification_config)
