@@ -114,8 +114,10 @@ def send_push_noti_deadline():
     저녁 6시에 알림을 보냅니다.
     """
     DURATION_DAYS = 3  # 업로드 허용 기간
-    tours = Travel.objects.filter(tour_date=timezone.localdate() - timedelta(days=DURATION_DAYS))
-
+    tours = Travel.objects.filter(
+        tour_date=timezone.localdate() - timedelta(days=DURATION_DAYS),
+        snapshotimages__isnull=True # 참조하는 snapshotimages가 없는 경우
+    )
     notification_config = {
         'title': '추억을 인생네컷으로 남겨요! 🌟',
         'body': '📸 오늘까지! \'{tour_name}\'에서 찍은 사진을 올리면 인생네컷으로 만들어드려요!'
