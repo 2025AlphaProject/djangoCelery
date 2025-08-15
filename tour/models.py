@@ -72,3 +72,12 @@ class PlaceImages(models.Model):
 
     class Meta:
         managed = False
+
+class SnapshotImages(models.Model):
+    # id: pk
+    tour = models.ForeignKey(Travel, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='', blank=True, null=True) # 이미지 필드를 추가합니다.
+
+    class Meta:
+        managed = False
