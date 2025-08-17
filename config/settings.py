@@ -220,6 +220,8 @@ CELERY_BEAT_SCHEDULE = {
     }
 }
 # 아래는 로그 설정입니다.
+LOG_DIR = './logs'
+os.makedirs(LOG_DIR, exist_ok=True)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False, # 기본 로거 설정 유지
@@ -239,8 +241,8 @@ LOGGING = {
     'handlers': { # 로그 핸들러 설정
         'file': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'info.log',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'celery_server.log'),
             'formatter': 'verbose',
             'encoding': 'utf-8'
         },
