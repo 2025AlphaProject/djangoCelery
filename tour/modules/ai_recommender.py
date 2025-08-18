@@ -85,7 +85,6 @@ class AiTourRecommender:
         logger.info(f'areaCode {areaCode} sigunguCode {sigunguCode}')
         ans = []
         for each in places:
-            logger.info(f'place: {each.name}')
             ans.append({
                 'id': each.id,
                 'name': each.name,
