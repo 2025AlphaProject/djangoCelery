@@ -27,3 +27,12 @@ class PublicDataPortalHttpClient:
         if response.status_code == 200:
             return response.json()
         raise HttpRequestException(f'Public Data Portal API HTTP request failed with status code {response.status_code}')
+
+    def get_relate_place_api_response(self, path: str, **kwargs):
+        base_url = 'http://apis.data.go.kr/B551011/TarRlteTarService1'
+        kwargs['serviceKey'] = self.service_key
+        response = requests.get(base_url + path, params=kwargs)
+        if response.status_code == 200:
+            return response.json()
+        raise HttpRequestException(
+            f'Public Data Portal API HTTP request failed with status code {response.status_code}')
