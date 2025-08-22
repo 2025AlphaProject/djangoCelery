@@ -32,7 +32,7 @@ class Travel(models.Model):
 
 class Place(models.Model):
     # id: pk
-    name = models.CharField(max_length=100) # 장소 이름, 글자 수 제한
+    name = models.CharField(max_length=100, db_index=True) # 장소 이름, 글자 수 제한
     mapX = models.FloatField() # 소수점 표현
     mapY = models.FloatField() # 소수점 표현
     road_address = models.TextField(blank=True, null=True) # 도로명 주소, 프론트로부터
@@ -78,6 +78,34 @@ class SnapshotImages(models.Model):
     tour = models.ForeignKey(Travel, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='', blank=True, null=True) # 이미지 필드를 추가합니다.
+
+    class Meta:
+        managed = False
+
+
+class RelationPlace(models.Model):
+    """
+        연관 관광지 정보를 나타냅니다.
+    """
+    place_name = models.CharField(max_length=1000, default='No place name')  # 장소 이름
+    place_area_cd = models.CharField(max_length=255)  # 지역 코드 (tour api 코드와 다름)
+    place_area_name = models.CharField(max_length=255)  # 지역 이름
+    place_sigungu_cd = models.CharField(max_length=255)  # 시군구 코드 (tour api 코드와 다름)
+    place_sigungu_name = models.CharField(max_length=255)  # 시군구 이름
+
+    related_place_name = models.CharField(max_length=1000, default='No related place name')  # 연관 장소 이름
+    related_place_area_cd = models.CharField(max_length=255)  # 지역 코드 (tour api 코드와 다름)
+    related_place_area_name = models.CharField(max_length=255)  # 지역 이름
+    related_place_sigungu_cd = models.CharField(max_length=255)  # 시군구 코드 (tour api 코드와 다름)
+    related_place_sigungu_name = models.CharField(max_length=255)  # 시군구 이름
+    related_place_cat1_name = models.CharField(max_length=255)  # 연관 장소 카테고리 대분류 이름
+    related_place_cat2_name = models.CharField(max_length=255)  # 연관 장소 카테고리 중분류 이름
+    related_place_cat3_name = models.CharField(max_length=255)  # 연관 장소 카테고리 소분류 이름
+
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, blank=True)
+    related_place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='related_place', null=True,
+                                      blank=True)
+    rank = models.IntegerField()  # 순위 (얼마나 두 장소가 연관이 있나 지표)
 
     class Meta:
         managed = False
