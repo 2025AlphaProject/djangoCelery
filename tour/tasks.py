@@ -8,10 +8,11 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import requests
 from config.settings import APP_LOGGER
-from .models import Event, Place
+from .models import Event, Place, RelationPlace
 import datetime
 import logging
 from services.tour_api_service import TourAPIService
+from .services import RelationTourSaveService
 logger = logging.getLogger(APP_LOGGER)
 
 channel_group_name = None # channel 그룹 이름입니다.
@@ -168,7 +169,7 @@ def save_new_places():
     # Place.objects.all().delete()
     logger.info('saving places....')
     tour_api_service = TourAPIService(service_key=PUBLIC_DATA_PORTAL_API_KEY)
-    numOfRows = 150 # 한번에 100개의 장소만 가져옵니다.
+    numOfRows = 1500 # 한번에 1000개의 장소만 가져옵니다.
     pageNo = 1
     while True:
         logger.info(f'pageNo: {pageNo} 장소 저장 시도 중입니다....')
@@ -177,7 +178,7 @@ def save_new_places():
             pageNo=pageNo,
         )
 
-        if pageNo > tour_api_service.total_count // numOfRows + 1:
+        if pageNo >= tour_api_service.total_count // numOfRows + 1:
             break
 
         for place in places:
@@ -206,3 +207,22 @@ def save_new_places():
             )
         pageNo += 1
     logger.info(f'All places saved')
+
+@shared_task
+def save_rel_places():
+    """
+        연관 관광지 정보 저장 task
+    """
+    # 모든 연관 관광지 정보를 저장합니다.
+    service = RelationTourSaveService()
+    service.save_all_rel_places()
+    # 로깅을 통해 관광지 정보 성공여부를 보여줍니다.
+    logger.info('saving related places SUCCESS')
+
+@shared_task
+def delete_all_related_places():
+    """
+        장소 정보 삭제 위한 임시 함수
+    """
+    RelationPlace.objects.all().delete()
+    logger.info('deleted all related places')

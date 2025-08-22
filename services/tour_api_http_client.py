@@ -396,6 +396,35 @@ class TourAPIHTTPClient:
                     params[arg] = arg_info.locals[arg] if not isinstance(arg_info.locals[arg], Enum) else arg_info.locals[arg].value
         return params
 
+class RelationPlaceApiHttpClient:
+
+    def __init__(self):
+        self.service_key = PUBLIC_DATA_PORTAL_API_KEY
+        self.http_client = PublicDataPortalHttpClient(service_key=self.service_key)
+
+    def get_relation_places_info_based_area(self,
+                                            pageNo,
+                                            numOfRows,
+                                            baseYm,
+                                            areaCd,
+                                            sigunguCd,
+                                            MobileOS='AND',
+                                            MobileApp='Conever',
+                                            _type='json'
+                                            ):
+        path = '/areaBasedList1'
+        params = {
+            'pageNo': pageNo,
+            'numOfRows': numOfRows,
+            'baseYm': baseYm,
+            'areaCd': areaCd,
+            'signguCd': sigunguCd,
+            'MobileOS': MobileOS,
+            'MobileApp': MobileApp,
+            '_type': _type,
+        }
+        return self.http_client.get_relate_place_api_response(path, **params)
+
 
 
 if __name__ == '__main__':
