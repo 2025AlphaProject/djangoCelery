@@ -1,4 +1,6 @@
 import anthropic
+from anthropic.types import MessageParam
+
 from .ai_service import AIService
 class ClaudeModel(AIService):
     def get_ai_comment(self, system_text='', content_text='', **kwargs):
@@ -6,20 +8,10 @@ class ClaudeModel(AIService):
         content = content_text
         client = anthropic.Anthropic(api_key=self.ai_service_key)
         message = client.messages.create(
-            model='claude-3-7-sonnet-20250219',
-            max_tokens=20000,
+            model='claude-4-opus-20250514',
+            max_tokens=1000,
             system=system,
-            messages=[
-                {
-                    "role": 'user',
-                    "content": [
-                        {
-                            'type': 'text',
-                            'text': content,
-                        }
-                    ]
-                }
-            ]
+            messages=MessageParam(content=content, role='user')
         )
         print(message.content[0].text)
         return message.content[0].text

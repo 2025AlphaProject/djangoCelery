@@ -81,7 +81,8 @@ class AiTourRecommender:
     def __get_all_category_place_list_from_db(self, areaCode, sigunguCode=None):
         if isinstance(sigunguCode, list):
             sigunguCode = sigunguCode[0]
-        places = Place.objects.filter(areacode=str(areaCode), sigungucode=str(sigunguCode))
+        places = Place.objects.filter(areacode=str(areaCode), sigungucode=str(sigunguCode)) if sigunguCode else Place.objects.filter(areacode=str(areaCode))
+        logger.info(f'count: {places.count()}')
         logger.info(f'areaCode {areaCode} sigunguCode {sigunguCode}')
         ans = []
         for each in places:
@@ -108,10 +109,10 @@ class AiTourRecommender:
         self.AI_MODEL.ai_service_key = self.__ai_service_key
         system_prompt = """
            너는 여행사 투어 가이드야. 내가 주는 다양한 카테고리의 장소 리스트 중에서
-           요청한 카테고리별로 우리나라에서 가장 추천할만한 장소들을 5개씩만 골라줘.
+           요청한 카테고리별로 우리나라에서 가장 추천할만한 장소들을 10개씩만 골라줘. 너가 직접 우리나라 인기 장소들을 검색해서 정확한 근거를 바탕으로 추천해줘.
            너무 리스트의 앞쪽에서만 추천 장소 뽑아내지 말고 리스트 안에서 적절한 장소들을 뽑아서 추천해줘. 
            아래와 같은 JSON 형식으로 출력해줘. 장소 설명이나 부가 설명 없이 반드시 JSON으로만 응답해야 해.
-           JSON의 key는 반드시 contentTypeId 숫자로 해야 해.
+           JSON의 key는 반드시 contentTypeId 숫자로 해야 해. 그리고 장소 정보들을 앞 쪽에서만 추출하지 말고 순서 상관없이 골고루 추출해서 장소를 골라줘.
 
            {
                "39": [
@@ -126,7 +127,8 @@ class AiTourRecommender:
            12: 관광지, 14: 문화시설, 15: 축제공연행사,
            28: 레포츠, 32: 숙박, 38: 쇼핑, 39: 음식점
            """
-        user_prompt = f"{str(place_list)}\n위 장소들을 다음 카테고리별로 정리해서 최대 5개씩만 골라줘: {category_names}"
+        logger.info(str(place_list))
+        user_prompt = f"{str(place_list)}\n위 장소들을 다음 카테고리별로 정리해서 최대 10개씩만 골라줘: {category_names}"
         return get_ai_response(self.AI_MODEL, system_prompt, user_prompt)
 
     def get_recommended_places_by_categories(self, user_id, areaCode, category_names: list, sigunguCode=None,
@@ -152,7 +154,7 @@ class AiTourRecommender:
             # 카테고리별 결과 추출
             result = {}
             for category in category_names:
-                category_result = ai_response.get(category, [])[:5]
+                category_result = ai_response.get(category, [])[:10]
                 place_objs = []
                 for item in category_result:
                     place_objs.append(Place.objects.get(id=int(item['id'])))
