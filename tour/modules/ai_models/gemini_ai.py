@@ -8,7 +8,7 @@ class GeminiModel(AIService):
 
         genai.configure(api_key=self.ai_service_key)
 
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content(
             contents=system_text + content_text,
         )
