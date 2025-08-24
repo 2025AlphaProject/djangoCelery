@@ -108,27 +108,38 @@ class AiTourRecommender:
         """
         self.AI_MODEL.ai_service_key = self.__ai_service_key
         system_prompt = """
-           너는 여행사 투어 가이드야. 내가 주는 다양한 카테고리의 장소 리스트 중에서
-           요청한 카테고리별로 우리나라에서 가장 추천할만한 장소들을 10개씩만 골라줘. 너가 직접 우리나라 인기 장소들을 검색해서 정확한 근거를 바탕으로 추천해줘.
-           너무 리스트의 앞쪽에서만 추천 장소 뽑아내지 말고 리스트 안에서 적절한 장소들을 뽑아서 추천해줘. 
-           아래와 같은 JSON 형식으로 출력해줘. 장소 설명이나 부가 설명 없이 반드시 JSON으로만 응답해야 해.
-           JSON의 key는 반드시 contentTypeId 숫자로 해야 해. 그리고 장소 정보들을 앞 쪽에서만 추출하지 말고 순서 상관없이 골고루 추출해서 장소를 골라줘.
+           당신은 한국 여행 큐레이터입니다.
 
-           {
-               "39": [
-                   {"id": "0", "name": "맛집A", "mapX": "126.98", "mapY": "37.56"},
-                   {"id": "4", "name": "맛집B", "mapX": "126.93", "mapY": "37.57"}
-               ],
-               "38": [...],
-               ...
-           }
+            [목표]
+            - 입력 리스트의 '순서'는 무시하고, 각 항목을 '유명도/대표성' 기준으로 점수화한 뒤,
+              요청한 contentTypeId별로 상위 10개를 선정하세요.
+            - 같은 체인/유사 카테고리의 중복은 줄이고(다변성), 해운대·송정·센텀 등 지역이 편향되지 않게 하세요.
+            
+            [입력]
+            - items: JSON 배열(각 항목: {id, name, mapX, mapY, contentTypeId})
+            - target_types: 예) ["12","14","39"]
+            
+            [선정 규칙]
+            1) 리스트 순서는 절대 사용하지 마세요. 반드시 전 항목을 스캔해 점수화하세요.
+            2) 점수 = 유명도(전국적 인지도/상징성) + 방문가치(랜드마크성/체험성) – 중복패널티.
+               - 동점이면 tie_breaker = (id를 숫자로 간주하여 97로 나눈 나머지)가 큰 순.
+            3) 편향 방지: 최종 10개 중 최소 5개는 입력리스트의 후반 사분위(하위 50%)에서 선발하도록 우선 고려.
+            4) 결과는 contentTypeId별로 상위 10개만, 아래 출력 포맷으로 내세요.
+            5) 출력은 JSON만. id/mapX/mapY는 문자열로 캐스팅하세요.
+            
+            [출력 포맷]
+            {
+              "12": [{"id":"", "name":"", "mapX":"", "mapY":""}, ...최대 10],
+              "14": [...],
+              "39": [...]
+            }
+            
+            [지금 할 일]
+            - items와 target_types를 받으면 위 규칙으로 재순위화 후 JSON만 출력.
 
-           contentTypeId는 다음과 같이 대응돼:
-           12: 관광지, 14: 문화시설, 15: 축제공연행사,
-           28: 레포츠, 32: 숙박, 38: 쇼핑, 39: 음식점
            """
         logger.info(str(place_list))
-        user_prompt = f"{str(place_list)}\n위 장소들을 다음 카테고리별로 정리해서 최대 10개씩만 골라줘: {category_names}"
+        user_prompt = f"items:{str(place_list)}\ntarget_types:{category_names}"
         return get_ai_response(self.AI_MODEL, system_prompt, user_prompt)
 
     def get_recommended_places_by_categories(self, user_id, areaCode, category_names: list, sigunguCode=None,
