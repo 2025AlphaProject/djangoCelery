@@ -43,6 +43,7 @@ def get_recommended_place_by_category_task(user_id, areaCode, categoryNames, sig
     result = {}
     for category, places in result_places.items():
         result[category] = [{
+            'id': place.id,
             'address': place.road_address,
             'areaCode': place.areacode,
             'contentId': place.contentid,
