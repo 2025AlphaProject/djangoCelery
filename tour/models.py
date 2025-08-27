@@ -53,6 +53,8 @@ class Place(models.Model):
     lclsSystm3 = models.CharField(max_length=255, blank=True)
     tel = models.TextField(blank=True)
 
+    updated_at = models.DateField(auto_now=True)
+
     class Meta:
         managed = False
 
