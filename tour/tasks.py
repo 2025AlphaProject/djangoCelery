@@ -13,6 +13,9 @@ import datetime
 import logging
 from services.tour_api_service import TourAPIService
 from .services import RelationTourSaveService
+from django.utils import timezone
+from datetime import timedelta
+
 logger = logging.getLogger(APP_LOGGER)
 
 channel_group_name = None # channel 그룹 이름입니다.
@@ -208,6 +211,14 @@ def save_new_places():
             )
         pageNo += 1
     logger.info(f'All places saved')
+
+    delete_old_places()
+    logger.info('deleted old places')
+
+@shared_task
+def delete_old_places():
+    yesterday = timezone.localdate(timezone.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    Place.objects.filter(updated_at=yesterday).delete() # 기존 정보 삭제
 
 @shared_task
 def save_rel_places():
