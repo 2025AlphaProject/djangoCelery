@@ -1,4 +1,8 @@
 import requests
+import logging
+from config.settings import APP_LOGGER
+
+logger = logging.getLogger(APP_LOGGER)
 
 class HttpRequestException(Exception):
     def __init__(self, message):
@@ -25,7 +29,12 @@ class PublicDataPortalHttpClient:
         kwargs['serviceKey'] = self.service_key
         response = requests.get(base_url + path, params=kwargs)
         if response.status_code == 200:
-            return response.json()
+            try:
+                return response.json()
+            except Exception as e:
+                logger.error(response.text)
+                return None
+
         raise HttpRequestException(f'Public Data Portal API HTTP request failed with status code {response.status_code}')
 
     def get_relate_place_api_response(self, path: str, **kwargs):

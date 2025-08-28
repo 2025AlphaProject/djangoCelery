@@ -1,4 +1,5 @@
 from celery import shared_task  # shared_task는 장고와 연관이 있는 작업일 때 사용하는 어노테이션 입니다.
+from openai import max_retries
 
 from .modules.ai_recommender import AiTourRecommender
 from .modules.tour_api import Arrange
@@ -167,8 +168,11 @@ def store_near_events():
             )
 
 
-@shared_task
-def save_new_places():
+@shared_task(
+    bind=True,
+    max_retries=3, # 3회 재시도
+)
+def save_new_places(self):
     # logger.info('removing old places....')
     # Place.objects.all().delete()
     logger.info('saving places....')
@@ -177,10 +181,15 @@ def save_new_places():
     pageNo = 1
     while True:
         logger.info(f'pageNo: {pageNo} 장소 저장 시도 중입니다....')
-        places = tour_api_service.get_area_based_list(
-            numOfRows=numOfRows,
-            pageNo=pageNo,
-        )
+        places = None
+        try:
+            places = tour_api_service.get_area_based_sync_list(
+                numOfRows=numOfRows,
+                pageNo=pageNo,
+            )
+        except Exception as e:
+            logger.warning('오류 발생. 재시도 중...')
+            self.retry(exc=e)
 
         if pageNo >= tour_api_service.total_count // numOfRows + 1:
             break
@@ -206,7 +215,8 @@ def save_new_places():
                     "lclsSystm2": place.lclsSystm2,
                     "lclsSystm3": place.lclsSystm3,
                     "tel": place.tel,
-                    "road_address": place.addr1
+                    "road_address": place.addr1,
+                    "showflag": place.showflag
                 }
             )
         pageNo += 1
@@ -219,6 +229,10 @@ def save_new_places():
 def delete_old_places():
     yesterday = timezone.localdate(timezone.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     Place.objects.filter(updated_at=yesterday).delete() # 기존 정보 삭제
+    logger.info('오래된 정보 삭제 완료')
+
+    Place.objects.filter(showflag="0").delete() # 비표출 정보 삭제
+    logger.info('비표출 정보 삭제 완료')
 
 @shared_task
 def save_rel_places():

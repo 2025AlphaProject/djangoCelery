@@ -53,6 +53,8 @@ class Place(models.Model):
     lclsSystm3 = models.CharField(max_length=255, blank=True)
     tel = models.TextField(blank=True)
 
+    showflag = models.CharField(max_length=255, db_default="1") # 기존 데이터는 표출 정보로 표시
+
     updated_at = models.DateField(auto_now=True)
 
     class Meta:
