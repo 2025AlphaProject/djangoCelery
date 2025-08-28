@@ -409,7 +409,7 @@ class RelationPlaceApiHttpClient:
                                             areaCd,
                                             sigunguCd,
                                             MobileOS='AND',
-                                            MobileApp='Conever',
+                                            MobileApp='conever',
                                             _type='json'
                                             ):
         path = '/areaBasedList1'
