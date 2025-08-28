@@ -148,7 +148,7 @@ class TourAPIHTTPClient:
     """
     def __init__(self, service_key: str,
                  mobile_os: Literal['AND', 'IOS', 'WEB', 'ETC'] ='AND',
-                 mobile_app: str = 'conever_tour_api_service',
+                 mobile_app: str = 'conever',
                  response_type: Literal['json', 'xml'] = 'json',
                  num_of_rows: int = 100,):
         self.serviceKey = service_key # 서비스 키를 받습니다.
@@ -350,6 +350,8 @@ class TourAPIHTTPClient:
         return self.http_client.get_tour_api_response(path, **params)
 
     def get_area_based_sync_list(self,
+                                 numOfRows: int,
+                                 pageNo: int,
                                  showflag: str = None,
                                  arrange: Arrange = None,
                                  contentTypeId: ContentType = None,

@@ -36,6 +36,7 @@ class Place:
     lclsSystm1: str = None # 분류체계 대분류
     lclsSystm2: str = None # 분류체계 중분류
     lclsSystm3: str = None # 분류체계 소분류
+    showflag: str = None # 표출 여부 (1: 표출, 0: 비표출)
 
 
 class TourAPIService:
@@ -103,6 +104,51 @@ class TourAPIService:
                 return item['code']
         return None
 
+    def get_area_based_sync_list(self,
+                                 numOfRows: int,
+                                 pageNo: int,
+                                 arrange: Arrange = None,
+                                 contentTypeId: ContentType = None,
+                                 area_info: Area = None,
+                                 category: Category = None,
+                                 modifiedtime: str = None,
+                                 ldong: lDong = None,
+                                 lclsSystem: lclsSystem = None
+                                 ):
+        raw_data = self.tour_api_http_client.get_area_based_sync_list(
+            numOfRows=numOfRows,
+            pageNo=pageNo,
+            arrange=arrange,
+            contentTypeId=contentTypeId,
+            area_info=area_info,
+            category=category,
+            modifiedtime=modifiedtime,
+            ldong=ldong,
+            lclsSystem=lclsSystem,
+        )
+        response = raw_data.get('response', None)
+        if response is None:
+            logger.warning('response 데이터 없음')
+            return None
+
+        self.total_count = raw_data['response']['body']['totalCount']
+
+        items = []
+        try:
+            items = raw_data['response']['body']['items']['item']
+        except KeyError as e:
+            logger.error(str(e) + ', Error occurred in get_area_based_list()')
+        # 올바르게 데이터가 넘어왔다고 가정.
+
+        places = []
+        for each in items:
+            # 각 each는 특정 장소 정보가 담긴 dictionary 형식입니다.
+            place = Place()
+            for key, value in each.items():
+                if hasattr(place, key):
+                    setattr(place, key, value)  # 속성 저장
+            places.append(place)
+        return places
 
 
 
