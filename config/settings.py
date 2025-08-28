@@ -216,7 +216,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     'store_all_places':{
         'task': 'tour.tasks.save_new_places',
-        'schedule': crontab(hour='6', minute='0'),
+        'schedule': crontab(hour='7', minute='0'),
     },
     'store_rel_places':{
         'task': 'tour.tasks.save_rel_places',
