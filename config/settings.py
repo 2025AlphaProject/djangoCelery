@@ -220,7 +220,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     'store_rel_places':{
         'task': 'tour.tasks.save_rel_places',
-        'schedule': crontab(hour='4', minute='0'), # 새벽 4시에 즉, 사람 몰리지 않는 시간대에 저장을 시도합니다.
+        'schedule': crontab(hour='2', minute='0', day_of_month='1'), # 새벽 2시에 즉, 사람 몰리지 않는 시간대에 저장을 시도합니다.
     }
 }
 # 아래는 로그 설정입니다.
