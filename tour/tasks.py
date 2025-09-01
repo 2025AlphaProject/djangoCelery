@@ -168,18 +168,17 @@ def store_near_events():
             )
 
 
-@shared_task(
-    bind=True,
-    max_retries=3, # 3회 재시도
-)
-def save_new_places(self):
+def save_new_places():
     # logger.info('removing old places....')
     # Place.objects.all().delete()
     logger.info('saving places....')
     tour_api_service = TourAPIService(service_key=PUBLIC_DATA_PORTAL_API_KEY)
     numOfRows = 1500 # 한번에 1000개의 장소만 가져옵니다.
     pageNo = 1
+    retry = 0
     while True:
+        if retry > 5:
+            logger.error('장소 저장 실패.')
         logger.info(f'pageNo: {pageNo} 장소 저장 시도 중입니다....')
         places = None
         try:
@@ -189,7 +188,7 @@ def save_new_places(self):
             )
         except Exception as e:
             logger.warning('오류 발생. 재시도 중...')
-            self.retry(exc=e)
+            continue
 
         if pageNo >= tour_api_service.total_count // numOfRows + 1:
             break
