@@ -174,7 +174,7 @@ def save_new_places():
     # Place.objects.all().delete()
     logger.info('saving places....')
     tour_api_service = TourAPIService(service_key=PUBLIC_DATA_PORTAL_API_KEY)
-    numOfRows = 1500 # 한번에 1000개의 장소만 가져옵니다.
+    numOfRows = 10000 # 한번에 1000개의 장소만 가져옵니다.
     pageNo = 1
     retry = 0
     while True:
