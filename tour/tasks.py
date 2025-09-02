@@ -189,6 +189,7 @@ def save_new_places():
             )
         except Exception as e:
             logger.warning('오류 발생. 재시도 중...')
+            retry += 1
             continue
 
         if pageNo >= tour_api_service.total_count // numOfRows + 1:
