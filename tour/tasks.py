@@ -168,6 +168,7 @@ def store_near_events():
             )
 
 
+@shared_task
 def save_new_places():
     # logger.info('removing old places....')
     # Place.objects.all().delete()
