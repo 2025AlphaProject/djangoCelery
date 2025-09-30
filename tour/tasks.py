@@ -180,6 +180,7 @@ def save_new_places():
     while True:
         if retry > 5:
             logger.error('장소 저장 실패.')
+            break
         logger.info(f'pageNo: {pageNo} 장소 저장 시도 중입니다....')
         places = None
         try:
